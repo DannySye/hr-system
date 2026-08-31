@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Providers } from '@/components/shared/Providers'
-import { Navbar } from '@/components/shared/Navbar'
+import { FrappeHeader } from '@/components/frappe/FrappeHeader'
 
 export const metadata: Metadata = {
-  title: 'NovaLink HR Simulation Lab',
-  description: '12-Day Interactive Human Resources Practicum & Persona Simulation Platform',
+  title: 'NovaLink HR System',
+  description: 'Enterprise Human Resources Management & Practitioner Simulation System',
 }
 
 export default function RootLayout({
@@ -15,9 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased">
+      <body className="min-h-full flex flex-col bg-[#F8F9FA] text-slate-900 antialiased">
         <Providers>
-          <Navbar />
+          <FrappeHeader />
           <main className="flex-1">{children}</main>
         </Providers>
       </body>

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -9,7 +10,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import {
-  Building2,
   Shield,
   UserCheck,
   ArrowRight,
@@ -19,6 +19,7 @@ import {
   LogIn,
   Sparkles,
   GraduationCap,
+  Building,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Role } from '@/lib/types'
@@ -101,7 +102,6 @@ export default function LoginPage() {
 
       toast.success(`Account created for ${regFullName}! Logging you in...`)
 
-      // Auto sign-in immediately
       const loginRes = await signIn('credentials', {
         email: regEmail,
         password: regPassword,
@@ -156,110 +156,98 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="max-w-lg w-full space-y-6">
+    <div className="min-h-[90vh] flex items-center justify-center p-4 sm:p-6 bg-[#F8F9FA]">
+      <div className="max-w-md w-full space-y-5">
+        {/* Brand Header with Logo */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-teal-700 text-white flex items-center justify-center shadow-md">
-            <Building2 className="w-7 h-7" />
+          <div className="w-12 h-12 mx-auto rounded-xl overflow-hidden border border-slate-200 bg-teal-900 flex items-center justify-center shadow-md">
+            <Image
+              src="/images/logo.png"
+              alt="NovaLink HR Logo"
+              width={48}
+              height={48}
+              className="object-cover"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            NovaLink HR Simulation Lab
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            NovaLink Human Resources
           </h1>
           <p className="text-xs text-slate-500">
-            Interactive Practicum Platform for Human Resource Management Interns & Trainers
+            Enterprise People Operations & Simulation Desk
           </p>
         </div>
 
-        <Card className="shadow-lg border-slate-200 overflow-hidden">
+        <Card className="shadow-sm border-slate-200 overflow-hidden bg-white rounded-xl">
           <Tabs
             value={activeTab}
             onValueChange={(val) => setActiveTab(val as 'login' | 'register')}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 w-full rounded-none border-b border-slate-100 bg-slate-50 p-1">
-              <TabsTrigger value="login" className="text-xs font-semibold py-2.5">
+            <TabsList className="grid grid-cols-2 w-full rounded-none border-b border-slate-200 bg-slate-50/80 p-1">
+              <TabsTrigger value="login" className="text-xs font-semibold py-2">
                 <LogIn className="w-3.5 h-3.5 mr-1.5" /> Sign In
               </TabsTrigger>
-              <TabsTrigger value="register" className="text-xs font-semibold py-2.5 text-teal-800">
-                <UserPlus className="w-3.5 h-3.5 mr-1.5" /> Create New Account
+              <TabsTrigger value="register" className="text-xs font-semibold py-2 text-teal-800">
+                <UserPlus className="w-3.5 h-3.5 mr-1.5" /> Create Account
               </TabsTrigger>
             </TabsList>
 
             {/* TAB 1: SIGN IN */}
-            <TabsContent value="login" className="p-0">
-              <CardHeader className="pb-3 pt-5">
-                <CardTitle className="text-base font-semibold text-slate-900">
-                  Welcome Back
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Enter your email and password to access your simulation dashboard.
-                </CardDescription>
-              </CardHeader>
-
+            <TabsContent value="login" className="p-0 m-0">
               <form onSubmit={handleLogin}>
-                <CardContent className="space-y-3.5">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-slate-400" /> Work / University Email
-                    </label>
+                <CardContent className="space-y-3.5 pt-5 pb-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Email Address</label>
                     <Input
                       type="email"
-                      placeholder="e.g. your.name@university.edu"
+                      placeholder="user@novalink.com"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       disabled={loginLoading}
-                      className="text-xs"
+                      className="text-xs h-8 bg-slate-50 border-slate-200"
                     />
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-slate-400" /> Password
-                    </label>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Password</label>
                     <Input
                       type="password"
                       placeholder="••••••••"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       disabled={loginLoading}
-                      className="text-xs"
+                      className="text-xs h-8 bg-slate-50 border-slate-200"
                     />
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col gap-3 pt-2 pb-5">
+                <CardFooter className="flex flex-col gap-2.5 pb-4">
                   <Button
                     type="submit"
-                    className="w-full text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white h-9"
+                    className="w-full text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white h-8"
                     disabled={loginLoading}
                   >
-                    {loginLoading ? 'Authenticating...' : 'Sign In to Workspace'}
-                    <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                    {loginLoading ? 'Authenticating...' : 'Sign In'}
                   </Button>
 
                   <p className="text-[11px] text-center text-slate-500">
-                    Don&apos;t have an account yet?{' '}
+                    Need an account?{' '}
                     <button
                       type="button"
                       onClick={() => setActiveTab('register')}
                       className="text-teal-700 font-semibold hover:underline"
                     >
-                      Create one in 10 seconds
+                      Register here
                     </button>
                   </p>
                 </CardFooter>
               </form>
 
-              {/* Seed Test Logins */}
-              <div className="px-6 pb-6 pt-3 border-t border-slate-100 bg-slate-50/50 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Quick Demo Logins
-                  </span>
-                  <Badge variant="outline" className="text-[9px]">
-                    Pre-seeded
-                  </Badge>
-                </div>
+              {/* Seed Demo Quick Logins */}
+              <div className="px-5 pb-5 pt-3 border-t border-slate-100 bg-slate-50/60 space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Quick Testing Accounts
+                </span>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     type="button"
@@ -267,9 +255,9 @@ export default function LoginPage() {
                     size="sm"
                     onClick={() => handleQuickLogin('trainee@novalink.com', 'trainee123')}
                     disabled={loginLoading}
-                    className="text-[11px] h-8 justify-start gap-1.5 border-teal-200 hover:bg-teal-50 text-teal-900 bg-white"
+                    className="text-[11px] h-7 justify-start gap-1.5 border-slate-200 text-slate-700 bg-white"
                   >
-                    <UserCheck className="w-3.5 h-3.5 text-teal-700" />
+                    <UserCheck className="w-3 h-3 text-teal-700" />
                     <span>Alex (Trainee)</span>
                   </Button>
 
@@ -279,125 +267,108 @@ export default function LoginPage() {
                     size="sm"
                     onClick={() => handleQuickLogin('trainer@novalink.com', 'trainer123')}
                     disabled={loginLoading}
-                    className="text-[11px] h-8 justify-start gap-1.5 border-slate-300 hover:bg-slate-100 text-slate-800 bg-white"
+                    className="text-[11px] h-7 justify-start gap-1.5 border-slate-200 text-slate-700 bg-white"
                   >
-                    <Shield className="w-3.5 h-3.5 text-slate-600" />
+                    <Shield className="w-3 h-3 text-slate-600" />
                     <span>Eleanor (Trainer)</span>
                   </Button>
                 </div>
               </div>
             </TabsContent>
 
-            {/* TAB 2: REGISTER (CREATE NEW ACCOUNT) */}
-            <TabsContent value="register" className="p-0">
-              <CardHeader className="pb-3 pt-5">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-slate-900">
-                    Create Custom Account
-                  </CardTitle>
-                  <Badge variant="default" className="bg-teal-700 text-[10px]">
-                    Instant Access
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs">
-                  Register as an HR Intern or Lead Trainer with your own name and credentials.
-                </CardDescription>
-              </CardHeader>
-
+            {/* TAB 2: REGISTER */}
+            <TabsContent value="register" className="p-0 m-0">
               <form onSubmit={handleRegister}>
-                <CardContent className="space-y-3.5">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700">
-                      Your Full Name (Practitioner / Instructor)
-                    </label>
+                <CardContent className="space-y-3 pt-5 pb-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-700">Full Name</label>
                     <Input
                       type="text"
-                      placeholder="e.g. Jordan Miller or Dr. Evelyn Harper"
+                      placeholder="e.g. Jordan Miller"
                       value={regFullName}
                       onChange={(e) => setRegFullName(e.target.value)}
                       disabled={regLoading}
-                      className="text-xs"
+                      className="text-xs h-8 bg-slate-50 border-slate-200"
                       required
                     />
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700">Email Address</label>
                     <Input
                       type="email"
-                      placeholder="e.g. j.miller@university.edu"
+                      placeholder="e.g. j.miller@novalink.com"
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
                       disabled={regLoading}
-                      className="text-xs"
+                      className="text-xs h-8 bg-slate-50 border-slate-200"
                       required
                     />
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700">Password</label>
                     <Input
                       type="password"
-                      placeholder="Create a password"
+                      placeholder="••••••••"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       disabled={regLoading}
-                      className="text-xs"
+                      className="text-xs h-8 bg-slate-50 border-slate-200"
                       required
                     />
                   </div>
 
-                  {/* Role Selector Card Buttons */}
-                  <div className="space-y-1.5 pt-1">
-                    <label className="text-xs font-semibold text-slate-700">Select Platform Role</label>
-                    <div className="grid grid-cols-2 gap-2.5">
+                  {/* Role Selector */}
+                  <div className="space-y-1 pt-1">
+                    <label className="text-xs font-semibold text-slate-700">Role</label>
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => setRegRole(Role.TRAINEE)}
-                        className={`p-3 rounded-lg border text-left text-xs transition flex flex-col justify-between ${
+                        className={`p-2.5 rounded-lg border text-left text-xs transition ${
                           regRole === Role.TRAINEE
-                            ? 'border-teal-600 bg-teal-50 text-teal-950 font-bold ring-1 ring-teal-600'
+                            ? 'border-teal-700 bg-teal-50 text-teal-950 font-bold ring-1 ring-teal-700'
                             : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <GraduationCap className="w-4 h-4 text-teal-700" />
-                          <span>HR Trainee / Intern</span>
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <GraduationCap className="w-3.5 h-3.5 text-teal-700" />
+                          <span>HR Trainee</span>
                         </div>
-                        <p className="text-[10px] text-slate-500 font-normal">
-                          12-day employee lifecycle simulation, tutorials & AI interview rooms.
-                        </p>
+                        <span className="text-[10px] text-slate-500 font-normal">
+                          12-Day Simulation
+                        </span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setRegRole(Role.TRAINER)}
-                        className={`p-3 rounded-lg border text-left text-xs transition flex flex-col justify-between ${
+                        className={`p-2.5 rounded-lg border text-left text-xs transition ${
                           regRole === Role.TRAINER
-                            ? 'border-teal-600 bg-teal-50 text-teal-950 font-bold ring-1 ring-teal-600'
+                            ? 'border-teal-700 bg-teal-50 text-teal-950 font-bold ring-1 ring-teal-700'
                             : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <Shield className="w-4 h-4 text-teal-700" />
-                          <span>Lead HR Trainer</span>
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <Shield className="w-3.5 h-3.5 text-teal-700" />
+                          <span>HR Trainer</span>
                         </div>
-                        <p className="text-[10px] text-slate-500 font-normal">
-                          Cohort dashboard, rubric grading, progress matrix & cohort invites.
-                        </p>
+                        <span className="text-[10px] text-slate-500 font-normal">
+                          Cohort & Grading
+                        </span>
                       </button>
                     </div>
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col gap-3 pt-2 pb-6">
+                <CardFooter className="flex flex-col gap-2.5 pb-5">
                   <Button
                     type="submit"
-                    className="w-full text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white h-9 gap-1.5"
+                    className="w-full text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white h-8"
                     disabled={regLoading}
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    {regLoading ? 'Creating Account & Workspace...' : 'Register & Enter Workspace'}
+                    {regLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
 
                   <p className="text-[11px] text-center text-slate-500">
@@ -407,7 +378,7 @@ export default function LoginPage() {
                       onClick={() => setActiveTab('login')}
                       className="text-teal-700 font-semibold hover:underline"
                     >
-                      Sign In to existing account
+                      Sign In
                     </button>
                   </p>
                 </CardFooter>

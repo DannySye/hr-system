@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { FrappeSidebar } from '@/components/frappe/FrappeSidebar'
+import Link from 'next/link'
 import {
   FileText,
   Send,
@@ -21,6 +23,7 @@ import {
   ShieldCheck,
   Award,
   BookOpen,
+  ArrowLeft,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { InterviewType, PersonaType, ProgressStatus } from "@/lib/types"
@@ -303,44 +306,64 @@ export function DayModuleClient({
   }
 
   return (
-    <div className="relative min-h-[90vh] pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-white border border-slate-200 shadow-xs">
+    <div className="flex min-h-[calc(100vh-3rem)] bg-[#F8F9FA]">
+      {/* Frappe Sidebar */}
+      <FrappeSidebar />
+
+      {/* Main Frappe Document View */}
+      <main className="flex-1 p-4 sm:p-6 space-y-4 max-w-7xl overflow-x-hidden">
+        {/* Frappe Breadcrumbs & Actions Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="default" className="text-[10px] bg-teal-700">
-                Simulation Day {dayNumber}
-              </Badge>
-              <Badge
-                variant={isSubmitted ? 'success' : 'secondary'}
-                className="text-[10px]"
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-0.5">
+              <Link href="/dashboard" className="hover:text-slate-900">
+                Home
+              </Link>
+              <span>/</span>
+              <Link href="/dashboard" className="hover:text-slate-900">
+                HR Desk
+              </Link>
+              <span>/</span>
+              <span className="font-semibold text-slate-800">Simulation Module {dayNumber}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard"
+                className="p-1 rounded hover:bg-slate-200 text-slate-500 transition"
+                title="Back to HR Desk"
               >
-                {isSubmitted ? 'Submitted & Locked for Review' : 'Work in Progress'}
+                <ArrowLeft className="w-4 h-4" />
+              </Link>
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                Day {dayNumber}: {dayTitle}
+              </h1>
+              <Badge
+                variant={isSubmitted ? 'default' : 'outline'}
+                className={`text-[10px] ${
+                  isSubmitted ? 'bg-emerald-700 text-white' : 'bg-white text-slate-700'
+                }`}
+              >
+                {isSubmitted ? 'Submitted & Locked' : 'In Progress'}
               </Badge>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{dayTitle}</h1>
-            <p className="text-xs text-slate-500">
-              NovaLink Global HR Practicum • Bachelor-Level Training Simulation
-            </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {isSubmitted ? (
-              <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-200 text-xs font-semibold">
-                <CheckCircle className="w-4 h-4" /> Day Completed
+              <div className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-200 text-xs font-semibold">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Milestone Completed
               </div>
             ) : (
               <Button
                 onClick={handleSubmitDay}
                 disabled={isSubmitting}
-                className="bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs h-9 px-5 shadow-sm gap-1.5"
+                className="bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs h-8 px-4 gap-1.5 shadow-2xs"
               >
                 {isSubmitting ? (
-                  'Validating Tutorial & Submitting...'
+                  'Submitting Deliverables...'
                 ) : (
                   <>
-                    <Send className="w-3.5 h-3.5" /> Submit Day {dayNumber} Deliverables
+                    <Send className="w-3 h-3" /> Save & Submit Deliverables
                   </>
                 )}
               </Button>
@@ -349,13 +372,13 @@ export function DayModuleClient({
         </div>
 
         {/* Main Work Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 space-y-5">
             {renderDayWorkspace()}
           </div>
 
           {/* Right Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-5">
             <EmployeeFileTimeline
               candidateName={
                 dayNumber <= 5
@@ -378,7 +401,7 @@ export function DayModuleClient({
             {dayNumber >= 6 && <ContinuousThreadsPanel currentDay={dayNumber} />}
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Collapsible Tutorial Panel */}
       <TutorialPanel

@@ -52,11 +52,12 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = buildPersonaSystemPrompt(targetPersona, interviewType, dayNumber)
 
-    // Option A: Free Google Gemini Flash API if key exists in env
+    // Option A: Free Google Gemini Flash-Lite API if key exists in env
     if (process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY) {
       try {
+        const modelName = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite'
         const result = await streamText({
-          model: google('gemini-1.5-flash'),
+          model: google(modelName),
           system: systemPrompt,
           messages: [
             ...history.map((h: any) => ({
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
 
         return result.toDataStreamResponse()
       } catch (geminiError) {
-        console.warn('Gemini API call failed, falling back to local simulation engine:', geminiError)
+        console.warn('Gemini Flash-Lite API call failed, falling back to local simulation engine:', geminiError)
       }
     }
 
