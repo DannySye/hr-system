@@ -53,6 +53,10 @@ export default async function DayDynamicPage({
     persona = await prisma.aiPersona.findFirst({ where: { name: 'Samira Khan' } })
   } else if (dayNumber === 10) {
     persona = await prisma.aiPersona.findFirst({ where: { name: 'Jordan Reed' } })
+  } else if (dayNumber === 11) {
+    persona = await prisma.aiPersona.findFirst({ where: { name: 'Jordan Hayes' } })
+  } else if (dayNumber === 12) {
+    persona = await prisma.aiPersona.findFirst({ where: { name: 'Elena Rostova' } })
   } else {
     persona = await prisma.aiPersona.findFirst({
       where: {
@@ -72,8 +76,8 @@ export default async function DayDynamicPage({
     8: 'training-development',
     9: 'employee-welfare',
     10: 'discipline',
-    11: 'reward-recognition',
-    12: 'exit-interviews',
+    11: 'career-development',
+    12: 'separation',
   }
 
   const phaseSlug = phaseSlugs[dayNumber] || 'workforce-planning'

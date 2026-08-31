@@ -4,9 +4,14 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Starting NovaLink HR Lab complete database seeding (Weeks 1 & 2)...')
+  console.log('🌱 Starting NovaLink HR Lab complete database seeding (Weeks 1, 2 & 3)...')
 
   // 1. Clean existing records in development
+  await prisma.analyticsSummary.deleteMany()
+  await prisma.exitInterview.deleteMany()
+  await prisma.exitRecord.deleteMany()
+  await prisma.recognitionRecord.deleteMany()
+  await prisma.careerDevelopmentPlan.deleteMany()
   await prisma.trainerFeedback.deleteMany()
   await prisma.interviewAssessment.deleteMany()
   await prisma.interview.deleteMany()
@@ -98,22 +103,22 @@ async function main() {
   const posFieldEngineer = await prisma.position.create({
     data: {
       departmentId: deptNetOps.id,
-      title: 'Field Engineer',
-      jobPurpose: 'Deploy, configure, and maintain mission-critical distributed network infrastructure across client sites.',
-      salaryBand: '£42,000 - £52,000',
-      location: 'Hybrid / Greater London Hub',
-      workingHours: '40 hrs/week (Mon-Fri 08:30 - 17:00, with on-call rotation)',
+      title: 'Field Engineer (Optical Infrastructure)',
+      salaryBand: '£42,000 – £52,000',
+      location: 'London Regional Operations Hub & UK Field Sites',
+      workingHours: '37.5 hours / week, on-call rota',
+      jobPurpose: 'Deploy, configure, and maintain mission-critical optical transmission cutovers and regional network nodes with 99.98% uptime SLA.',
     },
   })
 
-  const posBackendEngineer = await prisma.position.create({
+  const posSeniorFieldEngineer = await prisma.position.create({
     data: {
-      departmentId: deptEng.id,
-      title: 'Senior Backend Engineer',
-      jobPurpose: 'Architect, build, and maintain high-throughput data pipelines and API microservices.',
-      salaryBand: '£75,000 - £90,000',
-      location: 'Remote (UK / EU)',
-      workingHours: '40 hrs/week Flexible',
+      departmentId: deptNetOps.id,
+      title: 'Senior Field Engineer & Infrastructure Lead',
+      salaryBand: '£55,000 – £68,000',
+      location: 'London Operations Hub & Hybrid',
+      workingHours: '37.5 hours / week',
+      jobPurpose: 'Lead complex metropolitan fiber architectures, mentor junior field engineers, and manage high-severity incident responses.',
     },
   })
 
@@ -121,27 +126,38 @@ async function main() {
     data: {
       departmentId: deptOps.id,
       title: 'Operations Associate',
-      jobPurpose: 'Coordinate logistics, vendor inventory, and day-to-day office fulfillment workflows.',
-      salaryBand: '£32,000 - £38,000',
-      location: 'London Hub',
-      workingHours: '37.5 hrs/week (09:00 - 17:30)',
+      salaryBand: '£30,000 – £36,000',
+      location: 'London HQ / Hybrid',
+      workingHours: '37.5 hours / week',
+      jobPurpose: 'Coordinate logistics dispatch, tracking, and operational inventory across customer deployments.',
     },
   })
 
-  // 7. Seed Calendar (Days 1 - 12)
+  const posSystemsSpecialist = await prisma.position.create({
+    data: {
+      departmentId: deptNetOps.id,
+      title: 'Network Systems Specialist',
+      salaryBand: '£45,000 – £54,000',
+      location: 'London Regional Hub',
+      workingHours: '37.5 hours / week',
+      jobPurpose: 'Maintain network monitoring telemetry, diagnose edge routing anomalies, and coordinate vendor hardware RMAs.',
+    },
+  })
+
+  // 7. Initialize 12-Day Simulation Calendar
   const calendarData = [
     { dayNumber: 1, stageLabels: 'Workforce Planning & Job Analysis' },
-    { dayNumber: 2, stageLabels: 'Sourcing Strategy & Job Adverts' },
-    { dayNumber: 3, stageLabels: 'Selection Shortlisting & Interviewing' },
-    { dayNumber: 4, stageLabels: 'Offer Letters & Employment Contracts' },
-    { dayNumber: 5, stageLabels: 'Onboarding & Induction Design' },
-    { dayNumber: 6, stageLabels: 'Probationary Review & Attendance Register' },
-    { dayNumber: 7, stageLabels: 'Performance Appraisal & 360 Feedback' },
-    { dayNumber: 8, stageLabels: 'Learning & Development Needs Analysis' },
-    { dayNumber: 9, stageLabels: 'Employee Welfare & Grievance Procedures' },
-    { dayNumber: 10, stageLabels: 'Disciplinary & Statutory Fair Process' },
-    { dayNumber: 11, stageLabels: 'Total Reward, Recognition & Benefits Policy' },
-    { dayNumber: 12, stageLabels: 'Exit Interviews & Offboarding Synthesis' },
+    { dayNumber: 2, stageLabels: 'Talent Sourcing & Job Advertisements' },
+    { dayNumber: 3, stageLabels: 'Selection Shortlisting & STAR Interviewing' },
+    { dayNumber: 4, stageLabels: 'Referee Verification, Selection & Statutory Contracts' },
+    { dayNumber: 5, stageLabels: '3-Pillar Induction & Onboarding Setup' },
+    { dayNumber: 6, stageLabels: 'Probation Benchmarks & Milestone Check-in' },
+    { dayNumber: 7, stageLabels: 'SMART KPIs & 360-Degree Appraisal Synthesis' },
+    { dayNumber: 8, stageLabels: 'Training Needs Analysis & Kirkpatrick L&D' },
+    { dayNumber: 9, stageLabels: 'Employee Welfare & Formal Grievance Resolution' },
+    { dayNumber: 10, stageLabels: 'ACAS Statutory Disciplinary & Attendance Investigation' },
+    { dayNumber: 11, stageLabels: 'Career Development & Evidence-Based Recognition' },
+    { dayNumber: 12, stageLabels: 'Separation Diagnostics, Exit & Capstone Analytics' },
   ]
 
   for (const cal of calendarData) {
@@ -165,7 +181,7 @@ async function main() {
     })
   }
 
-  // 9. Create Hiring Manager Persona (Marcus Chen)
+  // 9. Create Manager Persona (Marcus Chen)
   const personaMarcus = await prisma.aiPersona.create({
     data: {
       name: 'Marcus Chen',
@@ -177,7 +193,7 @@ async function main() {
     },
   })
 
-  // 10. Create Referee Persona (Dr. Evelyn Vance)
+  // 10. Create Referee Persona (Dr. Arthur Sterling)
   const personaReferee = await prisma.aiPersona.create({
     data: {
       name: 'Dr. Arthur Sterling',
@@ -189,7 +205,7 @@ async function main() {
     },
   })
 
-  // 11. Create Candidates Bank (Week 1 Day 2/3)
+  // 11. Create Candidates Bank
   const candidatesRaw = [
     {
       name: 'Jordan Hayes',
@@ -229,6 +245,9 @@ async function main() {
     },
   ]
 
+  let jordanCandidateId = ''
+  let jordanPersonaId = ''
+
   for (const c of candidatesRaw) {
     const persona = await prisma.aiPersona.create({
       data: {
@@ -241,6 +260,10 @@ async function main() {
       },
     })
 
+    if (c.name === 'Jordan Hayes') {
+      jordanPersonaId = persona.id
+    }
+
     const candidate = await prisma.candidate.create({
       data: {
         fullName: c.name,
@@ -252,6 +275,10 @@ async function main() {
       },
     })
 
+    if (c.name === 'Jordan Hayes') {
+      jordanCandidateId = candidate.id
+    }
+
     await prisma.application.create({
       data: {
         candidateId: candidate.id,
@@ -261,13 +288,13 @@ async function main() {
     })
   }
 
-  // 12. Create Leave Types (Week 2)
+  // 12. Create Leave Types
   const leaveAnnual = await prisma.leaveType.create({ data: { name: 'Annual', defaultEntitlement: 24 } })
   const leaveSick = await prisma.leaveType.create({ data: { name: 'Sick', defaultEntitlement: 10 } })
   const leaveMat = await prisma.leaveType.create({ data: { name: 'Maternity', defaultEntitlement: 90 } })
   const leavePat = await prisma.leaveType.create({ data: { name: 'Paternity', defaultEntitlement: 7 } })
 
-  // 13. Create Training Catalog (Week 2)
+  // 13. Create Training Catalog
   await prisma.trainingCatalogItem.createMany({
     data: [
       { title: 'NovaLink Global IT & Compliance Induction', category: 'INDUCTION' },
@@ -298,8 +325,21 @@ async function main() {
     },
   })
 
+  // 15. Create Second Pre-existing Employee for Day 12 Exit Storyline (Elena Rostova)
+  const personaElena = await prisma.aiPersona.create({
+    data: {
+      name: 'Elena Rostova',
+      personaType: 'EMPLOYEE',
+      qualityTier: 'STRONG',
+      backgroundBrief: 'Network Systems Specialist who has been with NovaLink for 2.5 years. Resigning due to family relocation to Frankfurt and pursuing an opportunity in international telecoms architecture.',
+      personalityNotes: 'Professional, appreciative of NovaLink team, constructive about documentation bottlenecks, eager to ensure a comprehensive handover.',
+      voiceSettings: JSON.stringify({ pitch: 1.05, rate: 1.0 }),
+    },
+  })
+
   const empRiley = await prisma.employee.create({
     data: {
+      id: 'emp-101',
       name: 'Riley Morgan',
       fullName: 'Riley Morgan',
       employeeCode: 'NL-1001',
@@ -314,6 +354,7 @@ async function main() {
 
   const empJordanReed = await prisma.employee.create({
     data: {
+      id: 'emp-102',
       name: 'Jordan Reed',
       fullName: 'Jordan Reed',
       employeeCode: 'NL-1002',
@@ -326,8 +367,75 @@ async function main() {
     },
   })
 
+  const empElena = await prisma.employee.create({
+    data: {
+      id: 'emp-103',
+      name: 'Elena Rostova',
+      fullName: 'Elena Rostova',
+      employeeCode: 'NL-1003',
+      email: 'elena.rostova@novalink.com',
+      jobTitle: 'Network Systems Specialist',
+      departmentName: 'Network Operations',
+      departmentId: deptNetOps.id,
+      positionId: posSystemsSpecialist.id,
+      aiPersonaId: personaElena.id,
+      startDate: new Date('2024-02-15T09:00:00Z'),
+    },
+  })
+
+  // Create Storyline Employee (Jordan Hayes) representing the hired candidate
+  const empJordanHayes = await prisma.employee.create({
+    data: {
+      id: 'emp-100',
+      name: 'Jordan Hayes',
+      fullName: 'Jordan Hayes',
+      employeeCode: 'NL-1000',
+      email: 'jordan.hayes@novalink.com',
+      jobTitle: 'Field Engineer (Optical Infrastructure)',
+      departmentName: 'Network Operations',
+      departmentId: deptNetOps.id,
+      positionId: posFieldEngineer.id,
+      candidateOriginId: jordanCandidateId,
+      aiPersonaId: jordanPersonaId,
+      employmentStatus: 'CONFIRMED',
+      startDate: new Date('2026-08-01T09:00:00Z'),
+    },
+  })
+
+  // Seed Day 11 Evidence for Jordan Hayes: Performance Appraisal & Probation Review
+  await prisma.probationReview.create({
+    data: {
+      employeeId: empJordanHayes.id,
+      checkpoint: 'END',
+      objectivesMet: JSON.stringify({
+        opticalCutoverCompetency: true,
+        incidentSlaCompliance: true,
+        teamIntegration: true,
+        attendanceReliability: true,
+      }),
+      notes: 'Completed 6-month probation with exceptional ratings. Demonstrated rapid mastery of optical cutovers with zero downtime incidents.',
+      outcome: 'CONFIRM',
+      dayNumber: 6,
+    },
+  })
+
+  await prisma.performanceAppraisal.create({
+    data: {
+      employeeId: empJordanHayes.id,
+      periodLabel: 'H1 2026 Mid-Year Appraisal',
+      selfAssessment: 'Exceeded all SLA targets for metropolitan fiber cutovers. Interested in acquiring advanced DWDM certifications and mentoring new field technicians.',
+      supervisorNotes: 'Marcus Chen noted: Top 5% performance across regional infrastructure. Demonstrated strong leadership during the Shoreditch node cutover.',
+      colleagueFeedback: 'Peers commend Jordan for clear communication, calm composure under pressure, and willingness to share optical test scripts.',
+      strengths: 'Fast troubleshooting, thorough documentation, high adherence to statutory health and safety standards.',
+      weaknesses: 'Occasional reluctance to delegate lower-tier splicing tasks during emergency calls.',
+      trainingNeeds: 'Advanced Dense Wavelength Division Multiplexing (DWDM) and leadership mentoring skills.',
+      futureObjectives: 'Lead the Q4 London core backbone upgrade and prepare for Senior Field Engineer transition within 12-18 months.',
+      dayNumber: 7,
+    },
+  })
+
   // Leave balances for active staff
-  for (const emp of [empRiley, empJordanReed]) {
+  for (const emp of [empJordanHayes, empRiley, empJordanReed, empElena]) {
     await prisma.leaveBalance.createMany({
       data: [
         { employeeId: emp.id, leaveTypeId: leaveAnnual.id, entitled: 24, used: 2, balance: 22 },
@@ -338,13 +446,26 @@ async function main() {
     })
   }
 
-  // Seed 10-day attendance baseline (Jordan Reed has 4 latenesses)
+  // Seed attendance baseline for all employees from Day 6 onward
   const baseDate = new Date('2026-08-15T09:00:00Z')
   for (let i = 0; i < 10; i++) {
     const dayDate = new Date(baseDate)
     dayDate.setDate(baseDate.getDate() + i)
     if (dayDate.getDay() === 0 || dayDate.getDay() === 6) continue
 
+    // Jordan Hayes: Punctual & Present
+    await prisma.attendanceRecord.create({
+      data: {
+        employeeId: empJordanHayes.id,
+        date: dayDate,
+        timeIn: '08:48',
+        timeOut: '17:30',
+        status: 'PRESENT',
+        remarks: 'On-time arrival, field dispatch active.',
+      },
+    })
+
+    // Riley Morgan: Punctual & Present
     await prisma.attendanceRecord.create({
       data: {
         employeeId: empRiley.id,
@@ -356,6 +477,19 @@ async function main() {
       },
     })
 
+    // Elena Rostova: Present & Punctual
+    await prisma.attendanceRecord.create({
+      data: {
+        employeeId: empElena.id,
+        date: dayDate,
+        timeIn: '08:50',
+        timeOut: '17:30',
+        status: 'PRESENT',
+        remarks: 'Punctual shift, assisting systems telemetry.',
+      },
+    })
+
+    // Jordan Reed: 4 Latenesses
     const isLate = i === 1 || i === 3 || i === 6 || i === 8
     await prisma.attendanceRecord.create({
       data: {
@@ -371,7 +505,7 @@ async function main() {
     })
   }
 
-  console.log('✅ NovaLink database seeded with Week 1 candidates and Week 2 continuous operations!')
+  console.log('✅ NovaLink database seeded with Week 1 candidates, Week 2 continuous operations, and Week 3 career/exit scenarios!')
 }
 
 main()

@@ -198,45 +198,48 @@ model OfferContract {
 }
 
 model Employee {
-  id                    String                    @id @default(cuid())
-  candidateOriginId     String?                   @unique
-  employeeCode          String                    @unique @default("NL-1001")
-  fullName              String
-  name                  String                    @default("Employee")
-  email                 String?
-  jobTitle              String                    @default("Associate")
-  departmentName        String                    @default("Operations")
-  positionId            String?
-  position              Position?                 @relation(fields: [positionId], references: [id])
-  departmentId          String?
-  department            Department?               @relation(fields: [departmentId], references: [id])
-  supervisorId          String?
-  supervisor            Employee?                 @relation("Supervision", fields: [supervisorId], references: [id])
-  reports               Employee[]                @relation("Supervision")
-  startDate             DateTime                  @default(now())
-  employmentStatus      String                    @default("PROBATION") // "PROBATION" | "CONFIRMED" | "EXITED"
-  user                  User?
-  aiPersonaId           String?                   @unique
-  aiPersona             AiPersona?                @relation(fields: [aiPersonaId], references: [id])
-  files                 EmployeeFile[]
-  onboardingChecklists  OnboardingChecklistItem[]
-  orientationLogs       OrientationLog[]
-  probationReviews      ProbationReview[]
-  attendanceRecords     AttendanceRecord[]
-  leaveRequests         LeaveRequest[]
-  leaveBalances         LeaveBalance[]
-  performanceAppraisals PerformanceAppraisal[]
-  trainingRecords       TrainingRecord[]
-  welfareLogs           WelfareLog[]
-  disciplinaryCases     DisciplinaryCase[]
-  createdAt             DateTime                  @default(now())
+  id                     String                    @id @default(cuid())
+  candidateOriginId      String?                   @unique
+  employeeCode           String                    @unique @default("NL-1001")
+  fullName               String
+  name                   String                    @default("Employee")
+  email                  String?
+  jobTitle               String                    @default("Associate")
+  departmentName         String                    @default("Operations")
+  positionId             String?
+  position               Position?                 @relation(fields: [positionId], references: [id])
+  departmentId           String?
+  department             Department?               @relation(fields: [departmentId], references: [id])
+  supervisorId           String?
+  supervisor             Employee?                 @relation("Supervision", fields: [supervisorId], references: [id])
+  reports                Employee[]                @relation("Supervision")
+  startDate              DateTime                  @default(now())
+  employmentStatus       String                    @default("PROBATION") // "PROBATION" | "CONFIRMED" | "EXITED"
+  user                   User?
+  aiPersonaId            String?                   @unique
+  aiPersona              AiPersona?                @relation(fields: [aiPersonaId], references: [id])
+  files                  EmployeeFile[]
+  onboardingChecklists   OnboardingChecklistItem[]
+  orientationLogs        OrientationLog[]
+  probationReviews       ProbationReview[]
+  attendanceRecords      AttendanceRecord[]
+  leaveRequests          LeaveRequest[]
+  leaveBalances          LeaveBalance[]
+  performanceAppraisals  PerformanceAppraisal[]
+  trainingRecords        TrainingRecord[]
+  welfareLogs            WelfareLog[]
+  disciplinaryCases      DisciplinaryCase[]
+  careerDevelopmentPlans CareerDevelopmentPlan[]
+  recognitionRecords     RecognitionRecord[]
+  exitRecord             ExitRecord?
+  createdAt              DateTime                  @default(now())
 }
 
 model EmployeeFile {
   id            String   @id @default(cuid())
   employeeId    String
   employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  documentType  String   // "JOB_DESCRIPTION" | "INTERVIEW_ASSESSMENT" | "CONTRACT" | "ONBOARDING_CHECKLIST"
+  documentType  String   // "JOB_DESCRIPTION" | "INTERVIEW_ASSESSMENT" | "CONTRACT" | "ONBOARDING_CHECKLIST" | "CAREER_PLAN" | "EXIT_RECORD"
   documentRefId String?
   dateAdded     DateTime @default(now())
 }
@@ -311,6 +314,7 @@ model Interview {
   dayNumber           Int
   transcript          String               // JSON string
   interviewAssessment InterviewAssessment?
+  exitInterviews      ExitInterview[]
   createdAt           DateTime             @default(now())
 }
 
@@ -463,4 +467,65 @@ model DisciplinaryCase {
   documentedById     String
   dayNumber          Int      @default(10)
   createdAt          DateTime @default(now())
+}
+
+// --------------------------------------------------------
+// WEEK 3 MODELS (DAYS 11–12)
+// --------------------------------------------------------
+
+model CareerDevelopmentPlan {
+  id                    String   @id @default(cuid())
+  employeeId            String
+  employee              Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  careerGoals           String
+  skillsToDevelop       String
+  trainingOpportunities String
+  nextRoleTarget        String?
+  createdAt             DateTime @default(now())
+}
+
+model RecognitionRecord {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type       String   // "EMPLOYEE_OF_MONTH" | "CERTIFICATE" | "APPRECIATION" | "OTHER"
+  notes      String
+  date       DateTime @default(now())
+}
+
+model ExitRecord {
+  id               String         @id @default(cuid())
+  employeeId       String         @unique
+  employee         Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  exitReason       String         // "RESIGNATION" | "RETIREMENT" | "END_OF_CONTRACT" | "DISMISSAL" | "REDUNDANCY"
+  noticeDate       DateTime
+  handoverNotes    String
+  propertyReturned Boolean        @default(false)
+  finalPayrollNote String?
+  exitInterview    ExitInterview?
+  createdAt        DateTime       @default(now())
+}
+
+model ExitInterview {
+  id                     String     @id @default(cuid())
+  exitRecordId           String     @unique
+  exitRecord             ExitRecord @relation(fields: [exitRecordId], references: [id], onDelete: Cascade)
+  interviewId            String
+  interview              Interview  @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  whyLeaving             String
+  whatEnjoyed            String
+  challenges             String
+  managementFeedback     String
+  improvementSuggestions String
+  wouldRecommend         Boolean
+  createdAt              DateTime   @default(now())
+}
+
+model AnalyticsSummary {
+  id              String   @id @default(cuid())
+  traineeId       String
+  turnoverNote    String
+  timeToHireDays  Int
+  absenteeismRate Float
+  submittedAt     DateTime @default(now())
 }

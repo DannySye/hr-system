@@ -612,6 +612,124 @@ export function DynamicTutorialContent({ phaseSlug }: { phaseSlug: string }) {
         </div>
       )
 
+    case 'career-development':
+    case 'reward-recognition':
+      return (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-slate-900">Phase 11: Career Development</h2>
+          <p className="text-xs leading-relaxed text-slate-600">
+            Once an employee has settled in and is performing, HR&apos;s job shifts from &quot;getting them established&quot; to &quot;keeping them growing.&quot; Employees who can&apos;t see a future at a company tend to look for one elsewhere.
+          </p>
+          <TryItNow label="Review the evidence summary" href="#evidence-summary" />
+          <ScenarioDecision
+            id="cd-sc-1"
+            phaseSlug="career-development"
+            prompt="Two possible career plan entries for the same employee: (A) 'Employee wants to grow and improve skills.' vs (B) 'Employee wants to move toward Senior Field Engineer within 12-18 months; needs advanced fibre-optic certification; interested in mentoring new hires once promoted.' Which plan would actually be useful to refer back to in 6 months?"
+            options={[
+              {
+                id: "a",
+                label: "Plan A: 'Employee wants to grow and improve skills.'",
+                consequence: "Generic fluff: A generic plan cannot be measured against anything or held accountable in future reviews."
+              },
+              {
+                id: "b",
+                label: "Plan B: 'Employee wants to move toward Senior Field Engineer within 12-18 months; needs advanced fibre certification.'",
+                consequence: "Actionable & measurable: A specific plan with a named role, skill gap, and timeframe gives something concrete to check progress against."
+              }
+            ]}
+          />
+          <KnowledgeCheck
+            id="cd-kc-1"
+            phaseSlug="career-development"
+            questions={[
+              {
+                prompt: "What should a next-role target in a Career Development Plan be based on?",
+                options: [
+                  { id: "a", text: "Any role the employee names, regardless of whether it exists" },
+                  { id: "b", text: "A real position that exists on the org chart, ideally connected to what the employee actually expressed interest in" }
+                ],
+                correctId: "b",
+                explanation: "The next-role target should be grounded in the actual org structure, not an arbitrary aspiration disconnected from the company."
+              },
+              {
+                prompt: "What should justify giving formal recognition to an employee?",
+                options: [
+                  { id: "a", text: "A general sense that they're doing well" },
+                  { id: "b", text: "Specific documented evidence, such as appraisal results or training outcomes" }
+                ],
+                correctId: "b",
+                explanation: "Recognition tied to evidence keeps it meaningful, both for this employee and for others who see how recognition is earned."
+              }
+            ]}
+          />
+          <ReflectionPrompt phaseSlug="career-development" question="Why is writing a concrete internal mobility pathway better than letting employees search externally for growth?" />
+        </div>
+      )
+
+    case 'separation':
+    case 'exit-interviews':
+      return (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-slate-900">Phase 12: Separation & Exit + Capstone</h2>
+          <p className="text-xs leading-relaxed text-slate-600">
+            Every employee eventually leaves — by choice or otherwise — and how that&apos;s handled affects the company&apos;s reputation, the departing employee&apos;s experience, and what HR learns for next time. A rushed, undocumented exit wastes all of that.
+          </p>
+          <TryItNow label="Open the exit checklist" href="#exit-checklist" />
+          <ScenarioDecision
+            id="sep-sc-1"
+            phaseSlug="separation"
+            prompt="Absenteeism rate computed: 12.5%. Time-to-hire: 4 simulated days. One exit (resignation). How should an HR practitioner interpret this?"
+            options={[
+              {
+                id: "restate",
+                label: "Restate the numbers: 'Absenteeism was 12.5% and time-to-hire was 4 days.'",
+                consequence: "Superficial: Numbers alone don't explain what actions management should take."
+              },
+              {
+                id: "interpret",
+                label: "Interpret: 'The 12.5% absenteeism rate was isolated to transit disruptions in the disciplinary case, while a 4-day time-to-hire shows strong sourcing responsiveness.'",
+                consequence: "Strategic HR: Connecting numbers to operational root causes gives management actionable intelligence."
+              }
+            ]}
+          />
+          <KnowledgeCheck
+            id="sep-kc-1"
+            phaseSlug="separation"
+            questions={[
+              {
+                prompt: "Why is rushing the handover step during an exit a problem, even for a straightforward resignation?",
+                options: [
+                  { id: "a", text: "It isn't a problem — handover only matters for dismissals" },
+                  { id: "b", text: "It causes real operational disruption after the person has already left" }
+                ],
+                correctId: "b",
+                explanation: "A poor handover creates gaps that show up after the employee is gone and are much harder to fix."
+              },
+              {
+                prompt: "What makes a capstone analytics note useful, rather than just decorative?",
+                options: [
+                  { id: "a", text: "Including as many computed numbers as possible" },
+                  { id: "b", text: "Interpreting what the numbers suggest for a decision or question worth investigating" }
+                ],
+                correctId: "b",
+                explanation: "Numbers alone don't drive decisions — interpretation does. A good analytics note points toward what should happen next."
+              },
+              {
+                prompt: "Why review the full 12-day file timeline before writing the capstone summary?",
+                options: [
+                  { id: "a", text: "It's not necessary — the analytics cards already contain everything needed" },
+                  { id: "b", text: "Because it's the moment to check the whole story is coherent, and inconsistencies are worth noticing before closing the file" }
+                ],
+                correctId: "b",
+                explanation: "The file review is where the entire exercise comes together — it's the only point where the trainee sees everything built as one continuous record."
+              }
+            ]}
+          />
+          <ReflectionPrompt phaseSlug="separation" question="What was the most important statutory principle you applied across this 12-day employee lifecycle?" />
+        </div>
+      )
+
+
     default:
       return (
         <div className="space-y-4">

@@ -55,7 +55,11 @@ export default async function TraineeDetailPage({
         </div>
       </div>
 
-      <TraineeGradingClient trainee={trainee} progressRecords={trainee.traineeProgress} />
+      <TraineeGradingClient
+        trainee={trainee}
+        progressRecords={trainee.traineeProgress}
+        tutorialProgress={trainee.tutorialProgress || []}
+      />
     </div>
   )
 }

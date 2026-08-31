@@ -67,6 +67,18 @@ import { FairProcessChecklist } from '@/components/day10/FairProcessChecklist'
 import { DisciplinaryHearing } from '@/components/day10/DisciplinaryHearing'
 import { CaseFileForm } from '@/components/day10/CaseFileForm'
 
+// Week 3 Module Components (Days 11 & 12)
+import { EvidenceSummaryCard } from '@/components/day11/EvidenceSummaryCard'
+import { CareerConversationCard } from '@/components/day11/CareerConversationCard'
+import { CareerDevelopmentPlanForm } from '@/components/day11/CareerDevelopmentPlanForm'
+import { RecognitionPromptPanel } from '@/components/day11/RecognitionPromptPanel'
+
+import { ExitCaseSelector } from '@/components/day12/ExitCaseSelector'
+import { ExitChecklist } from '@/components/day12/ExitChecklist'
+import { ExitInterviewForm } from '@/components/day12/ExitInterviewForm'
+import { EmployeeFileClosureCard } from '@/components/day12/EmployeeFileClosureCard'
+import { CapstoneAnalyticsPanel } from '@/components/day12/CapstoneAnalyticsPanel'
+
 interface DayModuleClientProps {
   dayNumber: number
   dayTitle: string
@@ -94,6 +106,8 @@ export function DayModuleClient({
     'Standard NovaLink HR deliverable record aligned with statutory employment standards.'
   )
   const [fairStepsComplete, setFairStepsComplete] = useState(false)
+  const [exitChecklistDone, setExitChecklistDone] = useState(false)
+  const [fileAudited, setFileAudited] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const subtopics = DAY_SUBTOPICS[dayNumber] || []
@@ -120,7 +134,11 @@ export function DayModuleClient({
       }
 
       setStatus(ProgressStatus.SUBMITTED)
-      toast.success(`Day ${dayNumber} successfully submitted! Next day is now unlocked.`)
+      toast.success(
+        dayNumber === 12
+          ? '🎓 12-Day NovaLink HR Practicum Curriculum Fully Completed!'
+          : `Day ${dayNumber} successfully submitted! Next day is now unlocked.`
+      )
       router.refresh()
     } catch (err) {
       console.error(err)
@@ -240,6 +258,21 @@ export function DayModuleClient({
             </div>
           )
         }
+        break
+
+      case 11:
+        if (subId === 'evidence-summary') return <EvidenceSummaryCard />
+        if (subId === 'career-conversation') return <CareerConversationCard />
+        if (subId === 'career-plan') return <CareerDevelopmentPlanForm />
+        if (subId === 'recognition-prompt') return <RecognitionPromptPanel />
+        break
+
+      case 12:
+        if (subId === 'exit-case-selector') return <ExitCaseSelector />
+        if (subId === 'exit-checklist') return <ExitChecklist onChecklistCompleted={() => setExitChecklistDone(true)} />
+        if (subId === 'exit-interview') return <ExitInterviewForm isUnlocked={exitChecklistDone} />
+        if (subId === 'file-closure') return <EmployeeFileClosureCard onFileViewed={() => setFileAudited(true)} />
+        if (subId === 'capstone-analytics') return <CapstoneAnalyticsPanel fileViewed={fileAudited} onCapstoneSubmitted={() => setStatus(ProgressStatus.SUBMITTED)} />
         break
 
       default:

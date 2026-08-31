@@ -6,13 +6,30 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Clock, Lock, Star, Award, Send, AlertTriangle, ShieldAlert, BookOpen, MessageSquare } from 'lucide-react'
+import { EmployeeFileTimeline } from '@/components/shared/EmployeeFileTimeline'
+import {
+  CheckCircle,
+  Clock,
+  Lock,
+  Star,
+  Award,
+  Send,
+  AlertTriangle,
+  ShieldAlert,
+  BookOpen,
+  MessageSquare,
+  GraduationCap,
+  Layers,
+  FileCheck,
+  TrendingUp,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { ProgressStatus } from "@/lib/types"
 
 interface TraineeGradingClientProps {
   trainee: any
   progressRecords: any[]
+  tutorialProgress?: any[]
 }
 
 const RUBRIC_CRITERIA_BY_DAY: Record<number, { c1: string; c2: string; c3: string; flagDesc?: string }> = {
@@ -67,10 +84,43 @@ const RUBRIC_CRITERIA_BY_DAY: Record<number, { c1: string; c2: string; c3: strin
     c3: '3. Decision Proportionality & Right of Appeal',
     flagDesc: 'Audited attendance evidence citations (checks for >= 2 attendance record citations).',
   },
+  11: {
+    c1: '1. Appraisal & Historical Evidence Triangulation (SLA/Uptime cited)',
+    c2: '2. Career Plan Specificity (Role grounded in org chart, non-generic skills)',
+    c3: '3. Evidence-Based Recognition Soundness & Justification',
+  },
+  12: {
+    c1: '1. Exit Governance & Handover Checklist Rigor (Notice, Property, Payroll)',
+    c2: '2. Structured 6-Dimension Exit Diagnostics Depth',
+    c3: '3. Capstone Analytics Strategic Interpretation (>= 40 chars qualitative)',
+  },
 }
 
-export function TraineeGradingClient({ trainee, progressRecords }: TraineeGradingClientProps) {
+const ALL_PHASES = [
+  { slug: 'workforce-planning', name: 'Day 1: Workforce Planning' },
+  { slug: 'recruitment', name: 'Day 2: Recruitment & Adverts' },
+  { slug: 'selection', name: 'Day 3: Selection & STAR' },
+  { slug: 'hiring', name: 'Day 4: Hiring & Contracts' },
+  { slug: 'onboarding', name: 'Day 5: 3-Pillar Onboarding' },
+  { slug: 'probation', name: 'Day 6: Probation Benchmarks' },
+  { slug: 'performance-management', name: 'Day 7: SMART KPIs & 360°' },
+  { slug: 'training-development', name: 'Day 8: TNA & Kirkpatrick' },
+  { slug: 'employee-welfare', name: 'Day 9: Welfare & Grievance' },
+  { slug: 'discipline', name: 'Day 10: ACAS Disciplinary' },
+  { slug: 'career-development', name: 'Day 11: Career Development' },
+  { slug: 'separation', name: 'Day 12: Separation & Capstone' },
+]
+
+export function TraineeGradingClient({
+  trainee,
+  progressRecords,
+  tutorialProgress = [],
+}: TraineeGradingClientProps) {
   const router = useRouter()
+  const isDay12Submitted = progressRecords.some((p) => p.dayNumber === 12 && (p.status === 'SUBMITTED' || p.status === 'GRADED'))
+  const [viewMode, setViewMode] = useState<'daily' | 'capstone-rollup'>(
+    isDay12Submitted ? 'capstone-rollup' : 'daily'
+  )
   const [selectedDay, setSelectedDay] = useState(1)
   const [score1, setScore1] = useState(4)
   const [score2, setScore2] = useState(5)
@@ -86,6 +136,27 @@ export function TraineeGradingClient({ trainee, progressRecords }: TraineeGradin
     c2: '2. Policy & Equality Compliance',
     c3: '3. Practical Depth & Reasoning',
   }
+
+  // Calculate Roll-up metrics across all 12 days
+  const gradedRecords = progressRecords.filter((p) => p.feedback?.rubricScores)
+  let totalScoreSum = 0
+  let totalPossibleSum = 0
+
+  gradedRecords.forEach((p) => {
+    try {
+      const scores = JSON.parse(p.feedback.rubricScores)
+      const t = scores.total || (scores.score1 + scores.score2 + scores.score3)
+      totalScoreSum += t
+      totalPossibleSum += 15
+    } catch (e) {
+      // fallback
+    }
+  })
+
+  const averageScoreOutOf15 =
+    gradedRecords.length > 0 ? (totalScoreSum / gradedRecords.length).toFixed(1) : 'N/A'
+  const overallPercentage =
+    totalPossibleSum > 0 ? Math.round((totalScoreSum / totalPossibleSum) * 100) : 0
 
   const handleGradeSubmit = async () => {
     if (!currentRecord) {
@@ -127,185 +198,314 @@ export function TraineeGradingClient({ trainee, progressRecords }: TraineeGradin
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Column: 12-Day Selector */}
-      <div className="space-y-4">
-        <Card className="border-border shadow-2xs bg-white rounded-2xl">
-          <CardHeader className="pb-3 border-b border-border">
-            <CardTitle className="text-sm font-bold text-[#191c1e]">Simulation Timeline</CardTitle>
-            <CardDescription className="text-xs text-[#737686]">Select a day to review deliverables</CardDescription>
-          </CardHeader>
-          <CardContent className="p-3 space-y-1.5">
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((day) => {
-              const rec = progressRecords.find((p) => p.dayNumber === day)
-              const isSelected = selectedDay === day
-              const isComplete = rec?.status === ProgressStatus.GRADED
-              const isPending = rec?.status === ProgressStatus.SUBMITTED
+    <div className="space-y-6">
+      {/* Top View Mode Selector & Rollup Banner */}
+      <div className="bg-white p-4 rounded-2xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setViewMode('daily')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              viewMode === 'daily'
+                ? 'bg-[#2563eb] text-white shadow-xs'
+                : 'bg-[#f7f9fb] text-[#434655] border border-border hover:bg-[#f2f4f6]'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" /> Daily Rubric Grading
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('capstone-rollup')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              viewMode === 'capstone-rollup'
+                ? 'bg-[#004ac6] text-white shadow-xs'
+                : 'bg-[#f7f9fb] text-[#434655] border border-border hover:bg-[#f2f4f6]'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" /> Whole-Simulation Review &amp; Roll-up
+          </button>
+        </div>
 
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => setSelectedDay(day)}
-                  className={`w-full text-left p-3 rounded-xl border text-xs transition flex items-center justify-between ${
-                    isSelected
-                      ? 'border-[#2563eb] bg-[#d0e1fb] text-[#0b1c30] font-bold shadow-2xs'
-                      : 'border-border bg-white text-[#434655] hover:bg-[#f2f4f6]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span
-                      className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
-                        isComplete
-                          ? 'bg-[#004ac6] text-white'
-                          : isPending
-                          ? 'bg-[#fef3c7] text-[#b45309]'
-                          : 'bg-[#e2e8f0] text-[#737686]'
-                      }`}
-                    >
-                      {day}
-                    </span>
-                    <span>Day {day} Milestone</span>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={`text-[9px] ${
-                      isComplete
-                        ? 'bg-[#dbe1ff] text-[#004ac6] border-[#b4c5ff]'
-                        : isPending
-                        ? 'bg-[#fef3c7] text-[#b45309] border-[#fde68a]'
-                        : 'bg-[#f7f9fb] text-[#737686]'
-                    }`}
-                  >
-                    {isComplete ? 'Graded' : isPending ? 'Submitted' : 'In Progress'}
-                  </Badge>
-                </button>
-              )
-            })}
-          </CardContent>
-        </Card>
+        {/* Aggregate Rollup Badge */}
+        <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-1.5 text-[#737686]">
+            <span>Graded:</span>
+            <strong className="text-[#191c1e] font-mono">{gradedRecords.length}/12 Days</strong>
+          </div>
+          <div className="flex items-center gap-1.5 bg-[#dbe1ff] text-[#00174b] px-3 py-1 rounded-full font-bold">
+            <Award className="w-3.5 h-3.5 text-[#2563eb]" />
+            <span>Overall Grade: {averageScoreOutOf15}/15 ({overallPercentage}%)</span>
+          </div>
+        </div>
       </div>
 
-      {/* Right Column: Grading Panel & Rubric */}
-      <div className="lg:col-span-2 space-y-6">
-        <Card className="border-border shadow-2xs bg-white rounded-2xl">
-          <CardHeader className="border-b border-border pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-bold text-[#191c1e]">
-                  Day {selectedDay} Deliverable Assessment & Rubric
+      {viewMode === 'capstone-rollup' ? (
+        /* Whole-Simulation Review Mode (Full Timeline & Rollup Detail) */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Area (7 cols): Full 12-Day Employee File Timeline */}
+          <div className="lg:col-span-7 space-y-6">
+            <Card className="border-border shadow-2xs bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-border/70 p-5 pb-3">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-[#2563eb]" />
+                  <CardTitle className="text-sm font-bold text-[#191c1e]">
+                    12-Day Master Employee File Audit Timeline
+                  </CardTitle>
+                </div>
+                <CardDescription className="text-xs text-[#737686]">
+                  Complete chronological arc for Jordan Hayes across all 12 simulation modules.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-5 max-h-[700px] overflow-y-auto">
+                <EmployeeFileTimeline candidateName="Jordan Hayes" roleTitle="Field Engineer" />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Area (5 cols): 12-Day Rubric Roll-up & Tutorial Conceptual History */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Rubric Score Rollup Card */}
+            <Card className="border-border shadow-2xs bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-border/70 p-5 pb-3">
+                <CardTitle className="text-sm font-bold text-[#191c1e] flex items-center gap-2">
+                  <Award className="w-4 h-4 text-[#d97706]" /> 12-Day Rubric Roll-Up Summary
                 </CardTitle>
                 <CardDescription className="text-xs text-[#737686]">
-                  Assessing {trainee.fullName} against statutory benchmarks
+                  Preserves every day&apos;s individual scores and qualitative comments.
                 </CardDescription>
-              </div>
-              <Badge variant="outline" className="text-xs bg-[#dbe1ff] text-[#00174b] border-[#b4c5ff]">
-                Day {selectedDay}
-              </Badge>
-            </div>
-          </CardHeader>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3 max-h-[350px] overflow-y-auto">
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((day) => {
+                  const rec = progressRecords.find((p) => p.dayNumber === day)
+                  let scoreText = 'Not Graded'
+                  let commentsText = ''
+                  if (rec?.feedback?.rubricScores) {
+                    try {
+                      const sc = JSON.parse(rec.feedback.rubricScores)
+                      scoreText = `${sc.total || sc.score1 + sc.score2 + sc.score3}/15`
+                      commentsText = rec.feedback.comments || ''
+                    } catch (e) {}
+                  }
 
-          <CardContent className="p-6 space-y-6">
-            {/* Status overview */}
-            <div className="p-4 rounded-xl bg-[#f7f9fb] border border-border flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#2563eb]" />
-                <span className="font-semibold text-[#191c1e]">Submission Status:</span>
-                <span className="text-[#434655]">{currentRecord?.status || 'NOT_STARTED'}</span>
-              </div>
-              {currentRecord?.submittedAt && (
-                <span className="text-[#737686] text-[11px]">
-                  Submitted: {new Date(currentRecord.submittedAt).toLocaleDateString()}
-                </span>
-              )}
-            </div>
+                  return (
+                    <div key={day} className="p-3 rounded-xl border border-border bg-[#f7f9fb] space-y-1 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#191c1e]">Day {day} Rubric</span>
+                        <Badge
+                          variant="outline"
+                          className={
+                            rec?.status === 'GRADED'
+                              ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac] font-bold text-[10px]'
+                              : 'bg-[#f2f4f6] text-[#737686] text-[10px]'
+                          }
+                        >
+                          {scoreText}
+                        </Badge>
+                      </div>
+                      {commentsText && (
+                        <p className="text-[11px] text-[#434655] line-clamp-2 italic">
+                          &ldquo;{commentsText}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </CardContent>
+            </Card>
 
-            {/* Rubric Criteria */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold text-[#191c1e] uppercase tracking-wider flex items-center gap-1.5">
-                <Star className="w-4 h-4 text-[#2563eb]" /> Statutory Assessment Criteria (1-5 Scale)
-              </h4>
+            {/* 12-Phase Tutorial Engagement History */}
+            <Card className="border-border shadow-2xs bg-white rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-border/70 p-5 pb-3">
+                <CardTitle className="text-sm font-bold text-[#191c1e] flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-[#2563eb]" /> 12-Phase Tutorial &amp; Concept History
+                </CardTitle>
+                <CardDescription className="text-xs text-[#737686]">
+                  Verification of scenario decisions, knowledge check quizzes, and reflections.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4 space-y-2 max-h-[300px] overflow-y-auto text-xs">
+                {ALL_PHASES.map((ph, idx) => {
+                  const tProg = tutorialProgress.find(
+                    (tp: any) => tp.phaseSlug === ph.slug || tp.phaseSlug === ph.slug.replace('-interviews', '')
+                  )
+                  const isEngaged = Boolean(tProg?.engagedAt)
 
-              {/* Criterion 1 */}
-              <div className="p-4 rounded-xl border border-border bg-white space-y-2 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-[#191c1e]">{currentRubric.c1}</span>
-                  <span className="font-mono font-bold text-[#004ac6] bg-[#dbe1ff] px-2 py-0.5 rounded">
-                    {score1} / 5
-                  </span>
+                  return (
+                    <div
+                      key={ph.slug}
+                      className="p-2.5 rounded-xl border border-border bg-[#f7f9fb] flex items-center justify-between"
+                    >
+                      <div>
+                        <span className="font-bold text-[#191c1e] text-[11.5px] block">{ph.name}</span>
+                        <span className="text-[10px] text-[#737686]">
+                          {isEngaged ? `Quiz Score: ${tProg?.quizScore ?? 2}/${tProg?.quizTotal ?? 2}` : 'Not completed'}
+                        </span>
+                      </div>
+                      <Badge
+                        className={`text-[9px] font-bold ${
+                          isEngaged
+                            ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac]'
+                            : 'bg-[#ffdad6] text-[#ba1a1a] border-[#ffb4ab]'
+                        }`}
+                      >
+                        {isEngaged ? 'Engaged ✓' : 'Pending'}
+                      </Badge>
+                    </div>
+                  )
+                })}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        /* Daily Grading Mode (Standard Per-Day Evaluator) */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: 12-Day Selector */}
+          <div className="space-y-4">
+            <Card className="border-border shadow-2xs bg-white rounded-2xl">
+              <CardHeader className="pb-3 border-b border-border">
+                <CardTitle className="text-sm font-bold text-[#191c1e]">Simulation Timeline</CardTitle>
+                <CardDescription className="text-xs text-[#737686]">Select a day to review deliverables</CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 space-y-1.5">
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((day) => {
+                  const rec = progressRecords.find((p) => p.dayNumber === day)
+                  const isGraded = rec?.status === ProgressStatus.GRADED
+                  const isSubmittedDay = rec?.status === ProgressStatus.SUBMITTED
+                  const isSelected = selectedDay === day
+
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDay(day)}
+                      className={`w-full p-2.5 rounded-xl text-left text-xs transition flex items-center justify-between ${
+                        isSelected
+                          ? 'bg-[#d0e1fb] border border-[#b4c5ff] text-[#0b1c30] font-bold shadow-2xs'
+                          : 'bg-[#f7f9fb] border border-border/60 text-[#434655] hover:bg-[#f2f4f6]'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-white border border-border flex items-center justify-center text-[10px] font-mono font-bold">
+                          {day}
+                        </span>
+                        <span>Day {day} Module</span>
+                      </span>
+                      {isGraded ? (
+                        <Badge variant="outline" className="bg-[#dcfce7] text-[#15803d] border-[#86efac] text-[9px] font-bold">
+                          Graded
+                        </Badge>
+                      ) : isSubmittedDay ? (
+                        <Badge variant="outline" className="bg-[#dbe1ff] text-[#00174b] border-[#b4c5ff] text-[9px] font-bold">
+                          Submitted
+                        </Badge>
+                      ) : (
+                        <span className="text-[10px] text-[#737686]">In Progress</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column (2 cols): Rubric & Grading Form */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border-border shadow-2xs bg-white rounded-2xl">
+              <CardHeader className="border-b border-border/70 p-5 pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-bold text-[#191c1e]">
+                    Day {selectedDay} Rubric Evaluation
+                  </CardTitle>
+                  <Badge
+                    variant="outline"
+                    className="bg-[#dbe1ff] text-[#00174b] border-[#b4c5ff] font-bold text-xs"
+                  >
+                    Score: {score1 + score2 + score3} / 15
+                  </Badge>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={score1}
-                  onChange={(e) => setScore1(parseInt(e.target.value))}
-                  className="w-full accent-[#2563eb]"
-                />
-              </div>
+                <CardDescription className="text-xs text-[#737686]">
+                  Assess statutory compliance, evidentiary justification, and professional competency.
+                </CardDescription>
+              </CardHeader>
 
-              {/* Criterion 2 */}
-              <div className="p-4 rounded-xl border border-border bg-white space-y-2 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-[#191c1e]">{currentRubric.c2}</span>
-                  <span className="font-mono font-bold text-[#004ac6] bg-[#dbe1ff] px-2 py-0.5 rounded">
-                    {score2} / 5
-                  </span>
+              <CardContent className="p-5 space-y-5 text-xs">
+                {/* Rubric Criteria Sliders */}
+                <div className="space-y-4">
+                  {/* Criterion 1 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="font-bold text-[#191c1e]">{currentRubric.c1}</span>
+                      <span className="font-mono text-[#004ac6] font-bold">{score1} / 5</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={score1}
+                      onChange={(e) => setScore1(Number(e.target.value))}
+                      className="w-full accent-[#2563eb]"
+                    />
+                  </div>
+
+                  {/* Criterion 2 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="font-bold text-[#191c1e]">{currentRubric.c2}</span>
+                      <span className="font-mono text-[#004ac6] font-bold">{score2} / 5</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={score2}
+                      onChange={(e) => setScore2(Number(e.target.value))}
+                      className="w-full accent-[#2563eb]"
+                    />
+                  </div>
+
+                  {/* Criterion 3 */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="font-bold text-[#191c1e]">{currentRubric.c3}</span>
+                      <span className="font-mono text-[#004ac6] font-bold">{score3} / 5</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={score3}
+                      onChange={(e) => setScore3(Number(e.target.value))}
+                      className="w-full accent-[#2563eb]"
+                    />
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={score2}
-                  onChange={(e) => setScore2(parseInt(e.target.value))}
-                  className="w-full accent-[#2563eb]"
-                />
-              </div>
 
-              {/* Criterion 3 */}
-              <div className="p-4 rounded-xl border border-border bg-white space-y-2 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-[#191c1e]">{currentRubric.c3}</span>
-                  <span className="font-mono font-bold text-[#004ac6] bg-[#dbe1ff] px-2 py-0.5 rounded">
-                    {score3} / 5
-                  </span>
+                {/* Trainer Feedback Comments */}
+                <div className="space-y-1.5 pt-2">
+                  <label className="font-bold text-[#191c1e]">Trainer Feedback &amp; Development Directives</label>
+                  <Textarea
+                    value={comments}
+                    onChange={(e) => setComments(e.target.value)}
+                    className="text-xs min-h-[90px] bg-[#f7f9fb] border-border rounded-lg"
+                    placeholder="Provide constructive feedback citing specific strengths and statutory areas for improvement..."
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  value={score3}
-                  onChange={(e) => setScore3(parseInt(e.target.value))}
-                  className="w-full accent-[#2563eb]"
-                />
-              </div>
-            </div>
+              </CardContent>
 
-            {/* Written Feedback */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#191c1e]">
-                Trainer Feedback & Guidance Notes
-              </label>
-              <Textarea
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                className="text-xs min-h-[90px] bg-[#f7f9fb] border-border rounded-lg"
-              />
-            </div>
-          </CardContent>
-
-          <CardFooter className="p-6 pt-0 border-t border-border flex justify-end gap-3">
-            <Button
-              onClick={handleGradeSubmit}
-              disabled={submitting || !currentRecord}
-              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold h-9 px-5 gap-1.5 shadow-xs rounded-lg"
-            >
-              <Send className="w-3.5 h-3.5" />
-              {submitting ? 'Submitting Grade...' : 'Save & Issue Official Feedback'}
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+              <CardFooter className="p-5 pt-0 border-t border-border/60 flex justify-end gap-3">
+                <Button
+                  onClick={handleGradeSubmit}
+                  disabled={submitting}
+                  className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold h-9 px-5 gap-1.5 shadow-xs rounded-lg"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {submitting ? 'Submitting Grade...' : `Save Day ${selectedDay} Evaluation`}
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
