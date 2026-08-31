@@ -1,0 +1,60 @@
+# Phase 10: Disciplinary & Statutory Fair Process
+
+When an employee breaches workplace rules, procedural fairness is as vital as the rule itself. An unfair or undocumented process exposes the organization to legal liability under the ACAS Code of Practice.
+
+<TryItNow label="Review the case context" href="#case-context" />
+
+## The 6 Mandatory Steps of Statutory Fair Process
+1. **Identify the specific issue**
+2. **Establish the objective facts**
+3. **Provide full opportunity for the employee to respond**
+4. **Follow standard company procedure (advance notice, accompaniment)**
+5. **Make a proportionate, evidence-backed decision**
+6. **Formally document outcome with right of appeal**
+
+<ScenarioDecision
+  id="disc-sc-1"
+  prompt="During the disciplinary hearing, the employee explains that signaling failures on the central commuter train line caused their lateness. How do you weigh this?"
+  options={[
+    {
+      id: "dismiss",
+      label: "Dismiss the explanation completely — lateness is lateness regardless of reasons.",
+      consequence: "Disproportionate: Ignoring verifiable mitigating transport disruption leads to an excessively punitive outcome that fails an employment tribunal review."
+    },
+    {
+      id: "context",
+      label: "Take the explanation into account, verify circumstances, but address the failure to notify management in advance.",
+      consequence: "Proportionate & fair: You issue a structured First Written Warning with a 30-day punctuality monitoring plan, maintaining standards while respecting context."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="disc-kc-1"
+  questions={[
+    {
+      prompt: "What is the correct statutory sequence for handling a disciplinary case under the ACAS Code of Practice?",
+      options: [
+        { id: "a", text: "Decide penalty → Notify employee → Establish facts → Close case" },
+        { id: "b", text: "Identify issue → Establish facts → Give opportunity to respond → Follow procedure → Decide → Document" },
+        { id: "c", text: "Warn verbally → Issue final warning → Dismiss immediately" },
+        { id: "d", text: "Sequence does not matter as long as documentation exists" }
+      ],
+      correctId: "b",
+      explanation: "Procedural sequence is strictly protected: deciding the outcome before hearing the employee's response invalidates procedural fairness."
+    },
+    {
+      prompt: "What must every formal disciplinary outcome letter legally include?",
+      options: [
+        { id: "a", text: "An immediate salary deduction calculation" },
+        { id: "b", text: "Specific findings, the sanction duration, expected improvements, and the right to appeal" },
+        { id: "c", text: "A non-disclosure agreement" },
+        { id: "d", text: "A signed testimonial from peer colleagues" }
+      ],
+      correctId: "b",
+      explanation: "Written outcome letters must state the sanction, monitoring duration, required behavioral standards, and statutory appeal rights."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="Why is procedural fairness in disciplinary hearings just as legally significant as whether the underlying misconduct occurred?" />

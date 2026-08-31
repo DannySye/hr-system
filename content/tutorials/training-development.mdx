@@ -1,0 +1,47 @@
+# Phase 8: Learning & Development Needs Analysis
+
+Identifying a development gap during an appraisal and doing nothing about it wastes the diagnostic effort. This stage bridges performance diagnosis and actionable catalog fulfillment.
+
+<TryItNow label="Open the training need selector" href="#training-need" />
+
+## Four Core Training Categories
+1. **Induction**: Organizational values, workplace setup, compliance orientation.
+2. **Technical**: Role-specific engineering, software tools, data pipelines.
+3. **Soft Skills**: Conflict de-escalation, structured communication, teamwork.
+4. **Compliance**: UK GDPR, health & safety, anti-harassment regulations.
+
+<ScenarioDecision
+  id="train-sc-1"
+  prompt="You have logged a training session as 'Completed' in the register. Is your HR task complete?"
+  options={[
+    {
+      id: "yes",
+      label: "Yes — attendance is logged, move immediately to the next task.",
+      consequence: "Incomplete HR practice: Weeks later the same communication friction resurfaces because nobody evaluated whether the workshop changed day-to-day behavior."
+    },
+    {
+      id: "check",
+      label: "No — schedule a brief post-training check-in to evaluate on-the-job application (Kirkpatrick Level 3).",
+      consequence: "Best practice: You confirm that the employee is actively using the new retro communication frameworks, verifying training return on investment."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="train-kc-1"
+  questions={[
+    {
+      prompt: "Which framework level evaluates whether a training program actually changed employee behavior on the job?",
+      options: [
+        { id: "a", text: "Kirkpatrick Level 1 (Reaction)" },
+        { id: "b", text: "Kirkpatrick Level 2 (Learning)" },
+        { id: "c", text: "Kirkpatrick Level 3 (Behavior / Application)" },
+        { id: "d", text: "Kirkpatrick Level 4 (Results only)" }
+      ],
+      correctId: "c",
+      explanation: "Level 3 assesses behavioral transfer — whether knowledge acquired during training is actively applied in daily workplace operations."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="How can HR ensure training programs address genuine root-cause competency gaps rather than surface symptoms?" />

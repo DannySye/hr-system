@@ -1,0 +1,45 @@
+# Phase 9: Employee Welfare & Grievance Procedures
+
+HR is often the primary confidential channel an employee has to voice concerns before burnout or workplace conflict damages organizational stability.
+
+<TryItNow label="Open the welfare check-in" href="#welfare-checkin" />
+
+## Welfare vs. Formal Grievances
+- **Proactive Welfare**: Routine check-ins on workload sustainability, ergonomics, and mental wellbeing.
+- **Formal Grievance**: A formal complaint raised by an employee regarding unfair treatment, contract breach, or unaddressed workload distress.
+
+<ScenarioDecision
+  id="wel-sc-1"
+  prompt="An employee presents an emotional grievance regarding excessive overtime. What is your best first move?"
+  options={[
+    {
+      id: "solve-fast",
+      label: "Immediately propose a quick schedule fix in your very first response.",
+      consequence: "Weak de-escalation: The employee feels rushed and unheard, and your premature solution overlooks the systemic teammate reallocation issue."
+    },
+    {
+      id: "listen-first",
+      label: "Acknowledge the emotional strain, reflect back what you heard, and ask clarifying questions before proposing solutions.",
+      consequence: "Empathetic, effective HR: The employee de-escalates, feels validated, and collaborates constructively on a sustainable capacity plan."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="wel-kc-1"
+  questions={[
+    {
+      prompt: "Why must HR prioritize active listening before offering solutions during a grievance meeting?",
+      options: [
+        { id: "a", text: "To delay committing company resources" },
+        { id: "b", text: "Premature solutions risk missing root causes and leave the employee feeling dismissed" },
+        { id: "c", text: "Employment law forbids HR from proposing solutions in the same month" },
+        { id: "d", text: "Listening is only required when union representatives are present" }
+      ],
+      correctId: "b",
+      explanation: "Active listening builds trust and ensures that subsequent action plans address the genuine systemic driver of the grievance."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="How do you maintain professional impartiality when an employee raises a grievance against a high-performing senior manager?" />

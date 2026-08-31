@@ -1,0 +1,46 @@
+# Phase 3: Selection Shortlisting & Structured Interviewing
+
+Selection turns candidate applications into a defensible, evidence-based hiring decision using standardized scoring rubrics and competency interviews.
+
+<TryItNow label="Open the shortlisting sheet" href="#shortlisting-sheet" />
+
+## The STAR Behavioral Interview Framework
+- **Situation**: Context and background of the scenario.
+- **Task**: The specific problem or deliverable required.
+- **Action**: The exact steps taken by the candidate.
+- **Result**: Measurable outcomes and lessons learned.
+
+<ScenarioDecision
+  id="sel-sc-1"
+  prompt="A candidate provides a vague answer to an emergency network outage question ('I just fixed the router quickly'). What should HR do?"
+  options={[
+    {
+      id: "accept",
+      label: "Accept the brief answer and proceed to the next question.",
+      consequence: "Weak evidence: You have no concrete data on their actual diagnostic procedure."
+    },
+    {
+      id: "probe",
+      label: "Ask a structured STAR probe: 'Can you walk me through the specific diagnostic steps you used to identify the fault?'",
+      consequence: "Excellent interviewing: The candidate shares their OTDR signal testing procedure, providing solid evidence for assessment."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="sel-kc-1"
+  questions={[
+    {
+      prompt: "What does the STAR interview framework stand for?",
+      options: [
+        { id: "a", text: "Skills, Training, Attitude, Results" },
+        { id: "b", text: "Situation, Task, Action, Result" },
+        { id: "c", text: "Standard Technical Assessment Rubric" }
+      ],
+      correctId: "b",
+      explanation: "STAR grounds behavioral evaluations in concrete, verifiable workplace actions."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="Why is scoring all applicants on standardized weighted criteria critical for legal defensibility?" />

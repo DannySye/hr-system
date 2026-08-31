@@ -1,0 +1,466 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  passwordHash     String
+  role             String             // "TRAINER" | "TRAINEE"
+  fullName         String
+  createdAt        DateTime           @default(now())
+  employeeLink     Employee?          @relation(fields: [employeeId], references: [id])
+  employeeId       String?            @unique
+  traineeProgress  TraineeProgress[]
+  tutorialProgress TutorialProgress[]
+}
+
+model Company {
+  id            String       @id @default(cuid())
+  name          String
+  mission       String?
+  vision        String?
+  orgChartNotes String?
+  departments   Department[]
+}
+
+model Department {
+  id         String     @id @default(cuid())
+  companyId  String
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name       String
+  headOfDept String?
+  positions  Position[]
+  employees  Employee[]
+}
+
+model Position {
+  id                   String                @id @default(cuid())
+  departmentId         String
+  department           Department            @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  title                String
+  reportsToId          String?
+  jobPurpose           String?
+  salaryBand           String?
+  location             String?
+  workingHours         String?
+  kpis                 Kpi[]
+  vacancyRequests      VacancyRequest[]
+  jobDescriptions      JobDescription[]
+  personSpecifications PersonSpecification[]
+  jobAdvertisements    JobAdvertisement[]
+  applications         Application[]
+  selectionDecisions   SelectionDecision[]
+  offerContracts       OfferContract[]
+  employees            Employee[]
+}
+
+// --------------------------------------------------------
+// WEEK 1 MODELS (DAYS 1–5)
+// --------------------------------------------------------
+
+model VacancyRequest {
+  id               String   @id @default(cuid())
+  positionId       String
+  position         Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  reason           String
+  newOrReplacement String   // "NEW" | "REPLACEMENT"
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now())
+}
+
+model JobDescription {
+  id                String   @id @default(cuid())
+  positionId        String
+  position          Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  duties            String
+  qualifications    String
+  experience        String
+  skills            String
+  workingConditions String
+  kpis              String
+  dayNumber         Int      @default(1)
+  createdById       String
+  createdAt         DateTime @default(now())
+}
+
+model PersonSpecification {
+  id                String   @id @default(cuid())
+  positionId        String
+  position          Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  essentialCriteria String
+  desirableCriteria String
+  createdAt         DateTime @default(now())
+}
+
+model JobAdvertisement {
+  id           String   @id @default(cuid())
+  positionId   String
+  position     Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  adText       String
+  channelsUsed String   @default("[]") // JSON string of channels
+  closingDate  DateTime
+  dayNumber    Int      @default(2)
+  createdAt    DateTime @default(now())
+}
+
+model Candidate {
+  id              String           @id @default(cuid())
+  fullName        String
+  cvText          String
+  email           String
+  phone           String
+  qualityTier     String           @default("STRONG") // "STRONG" | "BORDERLINE" | "UNQUALIFIED"
+  aiPersonaId     String           @unique
+  aiPersona       AiPersona        @relation(fields: [aiPersonaId], references: [id])
+  applications    Application[]
+  referenceChecks ReferenceCheck[]
+  offerContracts  OfferContract[]
+  createdAt       DateTime         @default(now())
+}
+
+model Application {
+  id           String        @id @default(cuid())
+  candidateId  String
+  candidate    Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  positionId   String
+  position     Position      @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  dateReceived DateTime      @default(now())
+  dayNumber    Int           @default(2)
+  shortlisting Shortlisting?
+}
+
+model Shortlisting {
+  id             String      @id @default(cuid())
+  applicationId  String      @unique
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  criteriaScores String      // JSON string of scores
+  shortlisted    Boolean     @default(false)
+  notes          String
+  scoredById     String
+  createdAt      DateTime    @default(now())
+}
+
+model InterviewAssessment {
+  id                 String    @id @default(cuid())
+  interviewId        String    @unique
+  interview          Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  technicalScore     Int
+  behaviouralScore   Int
+  communicationScore Int
+  teamworkScore      Int
+  overallNotes       String
+  recommendation     String    // "PROCEED" | "REJECT" | "HOLD"
+  createdAt          DateTime  @default(now())
+}
+
+model ReferenceCheck {
+  id                 String    @id @default(cuid())
+  candidateId        String
+  candidate          Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  refereePersonaId   String
+  refereePersona     AiPersona @relation(fields: [refereePersonaId], references: [id], onDelete: Cascade)
+  employmentVerified Boolean   @default(true)
+  notes              String
+  dayNumber          Int       @default(4)
+  createdAt          DateTime  @default(now())
+}
+
+model SelectionDecision {
+  id                String   @id @default(cuid())
+  positionId        String
+  position          Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  chosenCandidateId String
+  justification     String
+  decidedById       String
+  createdAt         DateTime @default(now())
+}
+
+model OfferContract {
+  id                   String    @id @default(cuid())
+  candidateId          String
+  candidate            Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  positionId           String
+  position             Position  @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  startDate            DateTime
+  salary               String
+  probationMonths      Int       @default(3)
+  leaveEntitlementDays Int       @default(24)
+  benefits             String
+  termsText            String
+  status               String    @default("DRAFT") // "DRAFT" | "SENT" | "SIGNED"
+  createdAt            DateTime  @default(now())
+}
+
+model Employee {
+  id                    String                    @id @default(cuid())
+  candidateOriginId     String?                   @unique
+  employeeCode          String                    @unique @default("NL-1001")
+  fullName              String
+  name                  String                    @default("Employee")
+  email                 String?
+  jobTitle              String                    @default("Associate")
+  departmentName        String                    @default("Operations")
+  positionId            String?
+  position              Position?                 @relation(fields: [positionId], references: [id])
+  departmentId          String?
+  department            Department?               @relation(fields: [departmentId], references: [id])
+  supervisorId          String?
+  supervisor            Employee?                 @relation("Supervision", fields: [supervisorId], references: [id])
+  reports               Employee[]                @relation("Supervision")
+  startDate             DateTime                  @default(now())
+  employmentStatus      String                    @default("PROBATION") // "PROBATION" | "CONFIRMED" | "EXITED"
+  user                  User?
+  aiPersonaId           String?                   @unique
+  aiPersona             AiPersona?                @relation(fields: [aiPersonaId], references: [id])
+  files                 EmployeeFile[]
+  onboardingChecklists  OnboardingChecklistItem[]
+  orientationLogs       OrientationLog[]
+  probationReviews      ProbationReview[]
+  attendanceRecords     AttendanceRecord[]
+  leaveRequests         LeaveRequest[]
+  leaveBalances         LeaveBalance[]
+  performanceAppraisals PerformanceAppraisal[]
+  trainingRecords       TrainingRecord[]
+  welfareLogs           WelfareLog[]
+  disciplinaryCases     DisciplinaryCase[]
+  createdAt             DateTime                  @default(now())
+}
+
+model EmployeeFile {
+  id            String   @id @default(cuid())
+  employeeId    String
+  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  documentType  String   // "JOB_DESCRIPTION" | "INTERVIEW_ASSESSMENT" | "CONTRACT" | "ONBOARDING_CHECKLIST"
+  documentRefId String?
+  dateAdded     DateTime @default(now())
+}
+
+model OnboardingChecklistItem {
+  id           String   @id @default(cuid())
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  item         String
+  category     String   // "COMPANY_INFO" | "JOB_INFO" | "WORKPLACE_RULES"
+  completed    Boolean  @default(false)
+  completedDay Int?
+}
+
+model OrientationLog {
+  id           String   @id @default(cuid())
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  sessionNotes String
+  dayNumber    Int      @default(5)
+  createdAt    DateTime @default(now())
+}
+
+model AiPersona {
+  id               String           @id @default(cuid())
+  name             String           @default("Persona")
+  personaType      String           // "CANDIDATE" | "EMPLOYEE" | "REFEREE" | "MANAGER" | "COLLEAGUE"
+  backgroundBrief  String
+  personalityNotes String
+  qualityTier      String?          // "UNQUALIFIED" | "BORDERLINE" | "STRONG"
+  voiceSettings    String?          // JSON string
+  candidateLink    Candidate?
+  employeeLink     Employee?
+  interviews       Interview[]
+  referenceChecks  ReferenceCheck[]
+}
+
+model SimulationCalendar {
+  id           String    @id @default(cuid())
+  dayNumber    Int       @unique
+  stageLabels  String
+  unlockAt     DateTime?
+  manualUnlock Boolean   @default(false)
+}
+
+model TraineeProgress {
+  id          String           @id @default(cuid())
+  traineeId   String
+  trainee     User             @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+  dayNumber   Int
+  status      String           @default("LOCKED") // "LOCKED" | "IN_PROGRESS" | "SUBMITTED" | "GRADED"
+  submittedAt DateTime?
+  feedback    TrainerFeedback?
+
+  @@unique([traineeId, dayNumber])
+}
+
+model TrainerFeedback {
+  id                String          @id @default(cuid())
+  traineeProgressId String          @unique
+  traineeProgress   TraineeProgress @relation(fields: [traineeProgressId], references: [id], onDelete: Cascade)
+  rubricScores      String          // JSON string
+  comments          String
+  gradedAt          DateTime        @default(now())
+}
+
+model Interview {
+  id                  String               @id @default(cuid())
+  aiPersonaId         String
+  aiPersona           AiPersona            @relation(fields: [aiPersonaId], references: [id], onDelete: Cascade)
+  interviewType       String               // "SCOPING" | "SELECTION" | "REFERENCE" | "PROBATION_CHECKIN" | "APPRAISAL_360" | "WELFARE" | "DISCIPLINARY" | "CAREER" | "EXIT"
+  dayNumber           Int
+  transcript          String               // JSON string
+  interviewAssessment InterviewAssessment?
+  createdAt           DateTime             @default(now())
+}
+
+model TutorialProgress {
+  id             String    @id @default(cuid())
+  traineeId      String
+  trainee        User      @relation(fields: [traineeId], references: [id], onDelete: Cascade)
+  phaseSlug      String
+  readAt         DateTime?
+  quizScore      Int?
+  quizTotal      Int?
+  quizAttempts   Int       @default(0)
+  scenarioChoice String?
+  reflectionText String?
+  engagedAt      DateTime?
+
+  @@unique([traineeId, phaseSlug])
+}
+
+// --------------------------------------------------------
+// WEEK 2 MODELS (DAYS 6–10)
+// --------------------------------------------------------
+
+model ProbationReview {
+  id            String   @id @default(cuid())
+  employeeId    String
+  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  checkpoint    String   // "WEEK1" | "MONTH1" | "MONTH2" | "END"
+  objectivesMet String   // JSON string: { understandsJob: true, meetsAttendance: false, ... }
+  notes         String
+  outcome       String?  // "CONFIRM" | "EXTEND" | "OTHER"
+  dayNumber     Int
+  createdAt     DateTime @default(now())
+}
+
+model AttendanceRecord {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime
+  timeIn     String?
+  timeOut    String?
+  status     String   // "PRESENT" | "LATE" | "ABSENT" | "LEAVE"
+  remarks    String?
+
+  @@unique([employeeId, date])
+}
+
+model LeaveType {
+  id                  String         @id @default(cuid())
+  name                String         @unique // "Annual" | "Sick" | "Maternity" | "Paternity"
+  defaultEntitlement  Int
+  leaveRequests       LeaveRequest[]
+  leaveBalances       LeaveBalance[]
+}
+
+model LeaveRequest {
+  id          String    @id @default(cuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId String
+  leaveType   LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+  startDate   DateTime
+  endDate     DateTime
+  days        Int
+  status      String    @default("REQUESTED") // "REQUESTED" | "APPROVED" | "REJECTED"
+  approvedBy  String?
+  createdAt   DateTime  @default(now())
+}
+
+model LeaveBalance {
+  id          String    @id @default(cuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId String
+  leaveType   LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+  entitled    Int
+  used        Int       @default(0)
+  balance     Int
+
+  @@unique([employeeId, leaveTypeId])
+}
+
+model Kpi {
+  id         String   @id @default(cuid())
+  positionId String
+  position   Position @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  name       String
+  target     String
+  unit       String?
+}
+
+model PerformanceAppraisal {
+  id                String   @id @default(cuid())
+  employeeId        String
+  employee          Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  periodLabel       String
+  selfAssessment    String
+  supervisorNotes   String
+  colleagueFeedback String
+  strengths         String
+  weaknesses        String
+  trainingNeeds     String
+  futureObjectives  String
+  dayNumber         Int      @default(7)
+  createdAt         DateTime @default(now())
+}
+
+model TrainingCatalogItem {
+  id              String           @id @default(cuid())
+  title           String
+  category        String           // "INDUCTION" | "TECHNICAL" | "SOFT_SKILLS" | "COMPLIANCE"
+  trainingRecords TrainingRecord[]
+}
+
+model TrainingRecord {
+  id            String              @id @default(cuid())
+  employeeId    String
+  employee      Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  catalogItemId String
+  catalogItem   TrainingCatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+  date          DateTime
+  trainer       String
+  durationHours Float
+  result        String              // "COMPLETED" | "IN_PROGRESS" | "NOT_EFFECTIVE"
+  createdAt     DateTime            @default(now())
+}
+
+model WelfareLog {
+  id              String   @id @default(cuid())
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  concernType     String   // "WORKLOAD" | "SAFETY" | "RELATIONSHIP" | "GRIEVANCE" | "OTHER"
+  notes           String
+  raisedDay       Int
+  resolutionNotes String?
+  status          String   @default("OPEN") // "OPEN" | "RESOLVED"
+  createdAt       DateTime @default(now())
+}
+
+model DisciplinaryCase {
+  id                 String   @id @default(cuid())
+  employeeId         String
+  employee           Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  issueType          String   // "LATENESS" | "UNAUTHORISED_ABSENCE" | "MISCONDUCT" | "PROCEDURE_FAILURE" | "OTHER"
+  factsEstablished   String
+  employeeResponse   String
+  procedureChecklist String   // JSON string: { identified: true, factsEstablished: true, ... }
+  decision           String
+  documentedById     String
+  dayNumber          Int      @default(10)
+  createdAt          DateTime @default(now())
+}

@@ -1,0 +1,44 @@
+# Phase 4: Offer Letters, Reference Checks & Employment Contracts
+
+Selecting the preferred candidate must be followed by independent verification and formal written employment terms governed by the UK Employment Rights Act 1996.
+
+<TryItNow label="Open the reference check panel" href="#reference-check" />
+
+## Statutory Contract Requirements
+- **Core Terms**: Job title, salary, working hours, workplace location, holiday entitlement, probation period, and notice period.
+- **Independent Verification**: Professional references confirm employment dates and verify conduct before contract execution.
+
+<ScenarioDecision
+  id="hire-sc-1"
+  prompt="A referee confirms technical brilliance but mentions the candidate struggled with morning punctuality in their early career. What is your HR move?"
+  options={[
+    {
+      id: "ignore",
+      label: "Ignore the feedback entirely because the interview went well.",
+      consequence: "Risky: You fail to anticipate potential scheduling friction."
+    },
+    {
+      id: "note",
+      label: "Document the feedback in the hiring record and incorporate punctuality expectations into Day 6 probation objectives.",
+      consequence: "Prudent HR management: You verify capabilities while establishing proactive support structures during onboarding."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="hire-kc-1"
+  questions={[
+    {
+      prompt: "What transforms an employment offer into a legally binding contract under UK law?",
+      options: [
+        { id: "a", text: "An informal verbal phone call with no documentation" },
+        { id: "b", text: "Mutual agreement, consideration (salary), and formal written execution (signature)" },
+        { id: "c", text: "Only registration with the national tax authority" }
+      ],
+      correctId: "b",
+      explanation: "A binding contract requires mutual intention, agreed consideration, and written execution."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="What makes a selection decision justification record legally defensible if challenged by an unsuccessful applicant?" />

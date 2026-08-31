@@ -1,0 +1,55 @@
+# Phase 1: Workforce Planning & Job Analysis
+
+Before advertising any role, HR must answer a fundamental strategic question: does the organization truly need this headcount, and what does success in this role look like?
+
+<TryItNow label="Open the manager scoping chat" href="#manager-chat" />
+
+## Key Principles of Workforce Planning
+- **Job Description (JD) vs. Person Specification (PS)**: The JD describes the *job* (duties, working conditions, KPIs). The PS describes the *person* (qualifications, experience, essential vs. desirable criteria).
+- **New vs. Replacement**: Replacement roles inherit existing benchmarks; new roles require full business case justification.
+- **Equality Act 2010 Compliance**: Essential criteria must be bona fide occupational requirements (e.g. valid driving license for field deployments) rather than arbitrary filters.
+
+<ScenarioDecision
+  id="wp-sc-1"
+  prompt="The department manager tells you: 'just copy last year's job description, nothing's really changed.' What do you do?"
+  options={[
+    {
+      id: "copy",
+      label: "Copy it directly and move on — the manager knows best.",
+      consequence: "Weak move: The role's optical hardware shifted after network expansion, and the outdated advert attracts mismatched applicants."
+    },
+    {
+      id: "verify",
+      label: "Use it as a starting draft, but verify duties and tech specs in a 15-min scoping consultation.",
+      consequence: "High-impact HR leadership: You identify new OTDR fiber splicing requirements, ensuring accurate candidate attraction."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="wp-kc-1"
+  questions={[
+    {
+      prompt: "What is the primary difference between a job description and a person specification?",
+      options: [
+        { id: "a", text: "They are completely identical documents" },
+        { id: "b", text: "A job description describes the role; a person specification defines the ideal candidate's criteria" },
+        { id: "c", text: "Person specifications are only written for senior executives" }
+      ],
+      correctId: "b",
+      explanation: "Job description = duties and deliverables. Person specification = essential and desirable competencies."
+    },
+    {
+      prompt: "Why must KPIs be formulated during the workforce planning stage rather than after hiring?",
+      options: [
+        { id: "a", text: "So clear performance benchmarks are agreed before candidates apply" },
+        { id: "b", text: "Because employment law prohibits setting KPIs after Day 1" },
+        { id: "c", text: "Only to make the job advert longer" }
+      ],
+      correctId: "a",
+      explanation: "Establishing KPIs early aligns expectations between the hiring manager, HR, and the new hire from day one."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="What criteria should HR use to distinguish between a truly 'essential' requirement and a 'desirable' one?" />

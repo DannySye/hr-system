@@ -1,0 +1,45 @@
+# Phase 5: Onboarding Architecture & First-Month Induction
+
+Onboarding transforms a signed contract into a productive, culturally integrated employee through structured orientation and supervisory clarity.
+
+<TryItNow label="Open the onboarding checklist" href="#onboarding-checklist" />
+
+## The 3 Pillars of Structured Onboarding
+1. **About the Company**: Mission, culture, organizational structure, executive introductions.
+2. **About the Job**: Role responsibilities, milestones, hardware tool provisioning, pair buddy.
+3. **Workplace Rules**: Working hours, on-call escalation, leave requests, UK GDPR, and safety SOPs.
+
+<ScenarioDecision
+  id="onb-sc-1"
+  prompt="You are running behind schedule and tempted to skip the 'Workplace Rules' onboarding section. What is the better decision?"
+  options={[
+    {
+      id: "skip",
+      label: "Skip workplace rules — they are common sense anyway.",
+      consequence: "Compounding errors: The new hire is unsure of sickness notification procedures and violates on-call escalation protocols."
+    },
+    {
+      id: "include",
+      label: "Deliver all 3 pillars thoroughly, ensuring statutory rules and escalation SOPs are understood.",
+      consequence: "Seamless integration: The employee feels supported, understands expectations, and begins field deployments safely."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="onb-kc-1"
+  questions={[
+    {
+      prompt: "What are the three essential pillars of an effective employee onboarding program?",
+      options: [
+        { id: "a", text: "Salary, parking, and gym discounts" },
+        { id: "b", text: "Company culture, job deliverables, and statutory workplace rules" },
+        { id: "c", text: "Social events only" }
+      ],
+      correctId: "b",
+      explanation: "A balanced induction covers organizational context, role competence, and workplace governance."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="Why is establishing a clear direct supervisor connection on Day 1 vital for the subsequent probation review process?" />

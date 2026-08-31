@@ -1,0 +1,44 @@
+# Phase 2: Sourcing Strategy & Job Adverts
+
+Recruitment is about reaching the right pool of qualified talent through targeted sourcing channels with an advert that accurately communicates expectations.
+
+<TryItNow label="Open the advertisement builder" href="#ad-builder" />
+
+## Strategic Channel Selection
+- **Channel Fit**: Field telecom engineering requires technical job boards and technical college partnerships, not generic social blasts.
+- **Accurate Ad Copy**: Clear salary bands, working hours, on-call expectations, and definitive closing dates reduce drop-offs.
+
+<ScenarioDecision
+  id="rec-sc-1"
+  prompt="Under tight deadlines, you are tempted to publish the job advert across every available channel indiscriminately. What is the better strategy?"
+  options={[
+    {
+      id: "everywhere",
+      label: "Post everywhere — maximum volume is always better.",
+      consequence: "Inefficient: You receive hundreds of unqualified applications, inflating shortlisting time with no quality gain."
+    },
+    {
+      id: "targeted",
+      label: "Select 2-3 channels specifically targeting certified network technicians.",
+      consequence: "Strategic HR: A concentrated pool of relevant, qualified candidates makes shortlisting fast and effective."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="rec-kc-1"
+  questions={[
+    {
+      prompt: "What critical elements must every legally compliant job advert contain?",
+      options: [
+        { id: "a", text: "Salary history requirements, age limits, and personal hobbies" },
+        { id: "b", text: "Job title, core duties, qualifications, location, how to apply, and closing date" },
+        { id: "c", text: "Company mission statement only" }
+      ],
+      correctId: "b",
+      explanation: "Omission of core role details or closing dates produces candidate confusion and compliance risks."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="How does promoting internal recruitment channels support overall employee retention and morale?" />

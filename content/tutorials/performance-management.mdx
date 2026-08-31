@@ -1,0 +1,56 @@
+# Phase 7: Performance Management & 360° Feedback
+
+Performance management done right isn't an annual shock — it is measurable KPIs established early, monitored continuously, and appraised through multi-perspective 360-degree feedback.
+
+<TryItNow label="Open the KPI builder" href="#kpi-builder" />
+
+## The Power of 360-Degree Feedback
+- **Triangulated Perspective**: Self-assessments capture employee motivations; managerial reviews evaluate output; peer colleague feedback reveals collaboration and daily friction.
+- **Actionable Outcomes**: An effective appraisal synthesizes findings into concrete strengths, addressable weaknesses, and specific training needs.
+
+<ScenarioDecision
+  id="perf-sc-1"
+  prompt="The employee's self-assessment and the manager's review disagree significantly on delivery speed. How should HR handle the synthesis?"
+  options={[
+    {
+      id: "pick-one",
+      label: "Adopt the manager's perspective exclusively to maintain hierarchy.",
+      consequence: "Ineffective synthesis: Papering over disagreement ignores valuable signal. The employee feels invalidated, and the root cause of blocked dependencies remains hidden."
+    },
+    {
+      id: "surface",
+      label: "Explicitly highlight the discrepancy in the synthesis and schedule a facilitated alignment discussion.",
+      consequence: "Strong HR leadership: Acknowledging contrasting viewpoints enables constructive dialogue, uncovering that unadjusted sprint scope was slowing delivery."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="perf-kc-1"
+  questions={[
+    {
+      prompt: "What does '360-degree feedback' mean in human resource practice?",
+      options: [
+        { id: "a", text: "Feedback collected once every 360 days" },
+        { id: "b", text: "Performance input gathered across multiple perspectives — self, supervisor, peers, and subordinates" },
+        { id: "c", text: "An appraisal form comprising 360 standardized questions" },
+        { id: "d", text: "Feedback issued exclusively by the executive leadership committee" }
+      ],
+      correctId: "b",
+      explanation: "360-degree appraisal gathers a full circle of operational viewpoints to eliminate single-evaluator bias."
+    },
+    {
+      prompt: "Why must performance appraisals conclude with specific training needs and forward objectives?",
+      options: [
+        { id: "a", text: "To justify salary band adjustments to finance" },
+        { id: "b", text: "To close the developmental loop and turn feedback into measurable behavioral growth" },
+        { id: "c", text: "It is an optional formality with no impact on performance" },
+        { id: "d", text: "Because training catalogs cannot be accessed otherwise" }
+      ],
+      correctId: "b",
+      explanation: "Evaluating performance without documenting tangible training needs and forward targets renders the appraisal ineffective."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="When receiving conflicting feedback from a manager and a peer, what criteria should HR use to evaluate credibility and proportionality?" />

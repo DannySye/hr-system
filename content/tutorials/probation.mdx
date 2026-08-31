@@ -1,0 +1,56 @@
+# Phase 6: Probation Management & Continuous Operations
+
+A new hire isn't "done" the moment they sign an employment contract — probation is the structured operational window where both employer and employee confirm mutual competency and cultural alignment.
+
+<TryItNow label="Open the probation objective setter" href="#probation-objectives" />
+
+## Key Principles of Effective Probation
+- **Probation is proactive, not passive**: Establish clear, observable benchmarks on Day 1.
+- **Continuous attendance & leave monitoring**: Patterns of late arrival or unnotified absences accumulate over time; monitoring registers daily surfaces early signals before they escalate.
+
+<ScenarioDecision
+  id="prob-sc-1"
+  prompt="It's week one of probation and the new employee is quiet during the check-in, not volunteering much feedback. Do you push for detail or keep it light?"
+  options={[
+    {
+      id: "light",
+      label: "Keep it light — they're new, avoid putting them on the spot.",
+      consequence: "Weak move: You miss an early signal. They are confused about warehouse deployment SOPs but felt uncomfortable admitting it without gentle prompting."
+    },
+    {
+      id: "gentle-probe",
+      label: "Ask specific, low-pressure open questions about tools and daily blockers.",
+      consequence: "High-impact HR move: You discover an inventory software access gap and arrange a 15-minute pairing session with Sarah, preventing a month of compounding friction."
+    }
+  ]}
+/>
+
+<KnowledgeCheck
+  id="prob-kc-1"
+  questions={[
+    {
+      prompt: "What is the primary risk of waiting until the end of a 3-month probation period to evaluate an employee?",
+      options: [
+        { id: "a", text: "There is no risk; waiting is the standard approach" },
+        { id: "b", text: "It misses the chance to catch and correct addressable skill gaps early" },
+        { id: "c", text: "Probation checkpoints are legally prohibited under UK law" },
+        { id: "d", text: "Check-ins are only required for executive director roles" }
+      ],
+      correctId: "b",
+      explanation: "Regular checkpoints (Week 1, Month 1, Month 2, End) enable HR and managers to support the new hire while there is still time to rectify gaps."
+    },
+    {
+      prompt: "Starting on Day 6, why does the continuous attendance register matter across all subsequent simulation days?",
+      options: [
+        { id: "a", text: "It is purely background administrative data" },
+        { id: "b", text: "Real-world HR issues manifest as longitudinal patterns over time, not isolated single-day events" },
+        { id: "c", text: "Attendance is solely the payroll vendor's responsibility" },
+        { id: "d", text: "It only applies to employees confirmed past probation" }
+      ],
+      correctId: "b",
+      explanation: "Attendance tracking is a continuous thread because disciplinary, welfare, or capability cases arise from trends across multiple working weeks."
+    }
+  ]}
+/>
+
+<ReflectionPrompt question="How do you balance being supportive to a new hire while maintaining clear accountability for probation targets?" />
