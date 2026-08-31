@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: novalink-hr-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/novalink_hr?sslmode=disable
+      - DIRECT_URL=postgresql://postgres:postgres@postgres:5432/novalink_hr?sslmode=disable
+      - NEXTAUTH_SECRET=novalink_super_secret_session_jwt_key_at_least_32_characters_long_2026
+      - NEXTAUTH_URL=http://localhost:3000
+      - TRAINER_INVITE_CODE=NOVALINK_FACULTY_2026
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: novalink-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: novalink_hr
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d novalink_hr"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
