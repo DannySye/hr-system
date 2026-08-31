@@ -14,9 +14,12 @@ import {
   BookOpen,
   ArrowRight,
   Layers,
+  Sparkles,
 } from 'lucide-react'
 import { CohortManager } from '@/components/trainer/CohortManager'
 import { FrappeSidebar } from '@/components/frappe/FrappeSidebar'
+
+export const dynamic = 'force-dynamic'
 
 export default async function TrainerDashboardPage() {
   const session = await getServerSession(authOptions)
@@ -50,84 +53,58 @@ export default async function TrainerDashboardPage() {
   })
 
   return (
-    <div className="flex min-h-[calc(100vh-3rem)] bg-[#F8F9FA]">
+    <div className="flex min-h-[calc(100vh-4rem)] bg-[#f7f9fb]">
       <FrappeSidebar />
 
-      <main className="flex-1 p-4 sm:p-6 space-y-5 max-w-7xl overflow-x-hidden">
-        {/* Frappe Breadcrumb Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+      <main className="flex-1 p-6 lg:p-8 space-y-6 max-w-7xl overflow-x-hidden">
+        {/* Header Breadcrumb & Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
           <div>
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-0.5">
-              <Link href="/trainer/dashboard" className="hover:text-slate-900">
+            <div className="flex items-center gap-1.5 text-xs text-[#737686] mb-1">
+              <Link href="/trainer/dashboard" className="hover:text-[#191c1e]">
                 Home
               </Link>
               <span>/</span>
-              <span className="font-semibold text-slate-800">Trainer Administration</span>
+              <span className="font-semibold text-[#191c1e]">Trainer Administration</span>
               <span>/</span>
-              <span className="text-teal-700 font-medium">Cohort Center</span>
+              <span className="text-[#004ac6] font-medium">Cohort Center</span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[#191c1e] tracking-tight flex items-center gap-2.5">
               HR Faculty & Cohort Center
-              <Badge variant="outline" className="text-[10px] bg-white">
+              <Badge variant="outline" className="text-[10px] bg-[#dbe1ff] text-[#00174b] border-[#b4c5ff]">
                 Trainer Role
               </Badge>
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <Link href="/trainer/seed">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5 border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+                className="h-8 text-xs font-semibold gap-1.5 border-border bg-white hover:bg-[#f2f4f6] text-[#191c1e] shadow-2xs"
               >
-                <Database className="w-3.5 h-3.5 text-teal-700" /> Reset Database
+                <Database className="w-3.5 h-3.5 text-[#2563eb]" /> Reset Database
               </Button>
             </Link>
             <Link href="/trainer/tutorial-editor">
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5 border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
+                className="h-8 text-xs font-semibold gap-1.5 border-border bg-white hover:bg-[#f2f4f6] text-[#191c1e] shadow-2xs"
               >
-                <BookOpen className="w-3.5 h-3.5 text-teal-700" /> Curriculum
+                <BookOpen className="w-3.5 h-3.5 text-[#2563eb]" /> Curriculum
               </Button>
             </Link>
           </div>
         </div>
 
         {/* Cohort Manager */}
-        <CohortManager initialTrainees={trainees} initialTrainers={trainers} />
-
-        {/* 12-Day Simulation Roadmap Schedule */}
-        <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-teal-700" />
-            <h3 className="font-bold text-sm text-slate-900">
-              12-Day Simulation Curriculum Schedule
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
-            {calendarDays.map((cal) => (
-              <div
-                key={cal.dayNumber}
-                className="p-3 rounded-lg border border-slate-200 bg-slate-50/70 text-xs space-y-1"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900">Day {cal.dayNumber}</span>
-                  <Badge
-                    variant={cal.manualUnlock ? 'default' : 'outline'}
-                    className="text-[9px] bg-white text-slate-700"
-                  >
-                    {cal.manualUnlock ? 'Force Unlocked' : 'Progression'}
-                  </Badge>
-                </div>
-                <p className="text-slate-600 line-clamp-2 text-[11px]">{cal.stageLabels}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <CohortManager
+          initialTrainees={trainees}
+          initialTrainers={trainers}
+          calendarDays={calendarDays}
+        />
       </main>
     </div>
   )

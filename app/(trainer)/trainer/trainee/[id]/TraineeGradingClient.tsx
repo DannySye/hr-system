@@ -101,24 +101,26 @@ export function TraineeGradingClient({ trainee, progressRecords }: TraineeGradin
         body: JSON.stringify({
           traineeProgressId: currentRecord.id,
           rubricScores: {
-            criterion1: score1,
-            criterion2: score2,
-            criterion3: score3,
-            overallAverage: ((score1 + score2 + score3) / 3).toFixed(1),
+            score1,
+            score2,
+            score3,
+            total: score1 + score2 + score3,
           },
           comments,
         }),
       })
 
       const data = await res.json()
-      if (res.ok) {
-        toast.success(`Grade submitted for Day ${selectedDay}`)
-        router.refresh()
-      } else {
-        toast.error(data.error || 'Failed to submit grade')
+
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to submit grade.')
+        return
       }
+
+      toast.success(`Day ${selectedDay} graded successfully! Feedback saved.`)
+      router.refresh()
     } catch (err) {
-      toast.error('An error occurred while grading.')
+      toast.error('Failed to submit grade.')
     } finally {
       setSubmitting(false)
     }
@@ -126,177 +128,180 @@ export function TraineeGradingClient({ trainee, progressRecords }: TraineeGradin
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* 12 Days Selector */}
-      <div className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-          Simulation Day Deliverables
-        </h3>
-        {Array.from({ length: 12 }, (_, i) => i + 1).map((day) => {
-          const rec = progressRecords.find((p) => p.dayNumber === day)
-          const isSelected = selectedDay === day
-          const status = rec?.status ?? ProgressStatus.LOCKED
+      {/* Left Column: 12-Day Selector */}
+      <div className="space-y-4">
+        <Card className="border-border shadow-2xs bg-white rounded-2xl">
+          <CardHeader className="pb-3 border-b border-border">
+            <CardTitle className="text-sm font-bold text-[#191c1e]">Simulation Timeline</CardTitle>
+            <CardDescription className="text-xs text-[#737686]">Select a day to review deliverables</CardDescription>
+          </CardHeader>
+          <CardContent className="p-3 space-y-1.5">
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((day) => {
+              const rec = progressRecords.find((p) => p.dayNumber === day)
+              const isSelected = selectedDay === day
+              const isComplete = rec?.status === ProgressStatus.GRADED
+              const isPending = rec?.status === ProgressStatus.SUBMITTED
 
-          return (
-            <button
-              key={day}
-              type="button"
-              onClick={() => setSelectedDay(day)}
-              className={`w-full p-3 rounded-lg border text-left flex items-center justify-between text-xs transition ${
-                isSelected
-                  ? 'border-teal-700 bg-teal-50 text-teal-950 font-bold shadow-xs ring-1 ring-teal-600'
-                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold">
-                  {day}
-                </span>
-                <span>Day {day} Module</span>
-              </div>
-              <Badge
-                variant={
-                  status === ProgressStatus.GRADED
-                    ? 'success'
-                    : status === ProgressStatus.SUBMITTED
-                    ? 'warning'
-                    : 'secondary'
-                }
-                className="text-[9px]"
-              >
-                {status}
-              </Badge>
-            </button>
-          )
-        })}
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => setSelectedDay(day)}
+                  className={`w-full text-left p-3 rounded-xl border text-xs transition flex items-center justify-between ${
+                    isSelected
+                      ? 'border-[#2563eb] bg-[#d0e1fb] text-[#0b1c30] font-bold shadow-2xs'
+                      : 'border-border bg-white text-[#434655] hover:bg-[#f2f4f6]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
+                        isComplete
+                          ? 'bg-[#004ac6] text-white'
+                          : isPending
+                          ? 'bg-[#fef3c7] text-[#b45309]'
+                          : 'bg-[#e2e8f0] text-[#737686]'
+                      }`}
+                    >
+                      {day}
+                    </span>
+                    <span>Day {day} Milestone</span>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={`text-[9px] ${
+                      isComplete
+                        ? 'bg-[#dbe1ff] text-[#004ac6] border-[#b4c5ff]'
+                        : isPending
+                        ? 'bg-[#fef3c7] text-[#b45309] border-[#fde68a]'
+                        : 'bg-[#f7f9fb] text-[#737686]'
+                    }`}
+                  >
+                    {isComplete ? 'Graded' : isPending ? 'Submitted' : 'In Progress'}
+                  </Badge>
+                </button>
+              )
+            })}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Day Review & Grading Form */}
+      {/* Right Column: Grading Panel & Rubric */}
       <div className="lg:col-span-2 space-y-6">
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="border-b border-slate-100 pb-4">
+        <Card className="border-border shadow-2xs bg-white rounded-2xl">
+          <CardHeader className="border-b border-border pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base font-bold">
-                  Day {selectedDay} Deliverable Evaluation & Rubric
+                <CardTitle className="text-base font-bold text-[#191c1e]">
+                  Day {selectedDay} Deliverable Assessment & Rubric
                 </CardTitle>
-                <CardDescription className="text-xs">
-                  Trainee: {trainee.fullName} ({trainee.email})
+                <CardDescription className="text-xs text-[#737686]">
+                  Assessing {trainee.fullName} against statutory benchmarks
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="text-[10px]">
-                Status: {currentRecord?.status || 'LOCKED'}
+              <Badge variant="outline" className="text-xs bg-[#dbe1ff] text-[#00174b] border-[#b4c5ff]">
+                Day {selectedDay}
               </Badge>
             </div>
           </CardHeader>
 
-          <CardContent className="p-6 space-y-5">
-            {/* Submission metadata */}
-            <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs flex items-center justify-between text-slate-600">
-              <span>
-                <strong>Submitted At:</strong>{' '}
-                {currentRecord?.submittedAt
-                  ? new Date(currentRecord.submittedAt).toLocaleString()
-                  : 'Pending trainee submission'}
-              </span>
-              <span className="flex items-center gap-1 text-emerald-700 font-semibold">
-                <CheckCircle className="w-3.5 h-3.5" /> Tutorial Engaged
-              </span>
+          <CardContent className="p-6 space-y-6">
+            {/* Status overview */}
+            <div className="p-4 rounded-xl bg-[#f7f9fb] border border-border flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#2563eb]" />
+                <span className="font-semibold text-[#191c1e]">Submission Status:</span>
+                <span className="text-[#434655]">{currentRecord?.status || 'NOT_STARTED'}</span>
+              </div>
+              {currentRecord?.submittedAt && (
+                <span className="text-[#737686] text-[11px]">
+                  Submitted: {new Date(currentRecord.submittedAt).toLocaleDateString()}
+                </span>
+              )}
             </div>
 
-            {/* Rubric Evaluation */}
-            <div className="space-y-4 pt-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Award className="w-4 h-4 text-teal-700" /> Rubric Competency Scores (1 to 5)
+            {/* Rubric Criteria */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-[#191c1e] uppercase tracking-wider flex items-center gap-1.5">
+                <Star className="w-4 h-4 text-[#2563eb]" /> Statutory Assessment Criteria (1-5 Scale)
               </h4>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-md bg-white border border-slate-200 text-xs">
-                  <span className="font-semibold text-slate-800">{currentRubric.c1}</span>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => setScore1(val)}
-                        className={`w-7 h-7 rounded text-xs font-bold transition ${
-                          score1 === val
-                            ? 'bg-teal-700 text-white'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
+              {/* Criterion 1 */}
+              <div className="p-4 rounded-xl border border-border bg-white space-y-2 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-[#191c1e]">{currentRubric.c1}</span>
+                  <span className="font-mono font-bold text-[#004ac6] bg-[#dbe1ff] px-2 py-0.5 rounded">
+                    {score1} / 5
+                  </span>
                 </div>
-
-                <div className="flex items-center justify-between p-3 rounded-md bg-white border border-slate-200 text-xs">
-                  <span className="font-semibold text-slate-800">{currentRubric.c2}</span>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => setScore2(val)}
-                        className={`w-7 h-7 rounded text-xs font-bold transition ${
-                          score2 === val
-                            ? 'bg-teal-700 text-white'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-md bg-white border border-slate-200 text-xs">
-                  <span className="font-semibold text-slate-800">{currentRubric.c3}</span>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => setScore3(val)}
-                        className={`w-7 h-7 rounded text-xs font-bold transition ${
-                          score3 === val
-                            ? 'bg-teal-700 text-white'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={score1}
+                  onChange={(e) => setScore1(parseInt(e.target.value))}
+                  className="w-full accent-[#2563eb]"
+                />
               </div>
 
-              {/* Qualitative Comments */}
-              <div className="space-y-1.5 pt-2">
-                <label className="text-xs font-semibold text-slate-700">
-                  Trainer Feedback & Pedagogical Coaching Comments
-                </label>
-                <Textarea
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  placeholder="Provide qualitative feedback on the intern's HR decisions..."
-                  className="text-xs min-h-[90px]"
+              {/* Criterion 2 */}
+              <div className="p-4 rounded-xl border border-border bg-white space-y-2 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-[#191c1e]">{currentRubric.c2}</span>
+                  <span className="font-mono font-bold text-[#004ac6] bg-[#dbe1ff] px-2 py-0.5 rounded">
+                    {score2} / 5
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={score2}
+                  onChange={(e) => setScore2(parseInt(e.target.value))}
+                  className="w-full accent-[#2563eb]"
+                />
+              </div>
+
+              {/* Criterion 3 */}
+              <div className="p-4 rounded-xl border border-border bg-white space-y-2 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-[#191c1e]">{currentRubric.c3}</span>
+                  <span className="font-mono font-bold text-[#004ac6] bg-[#dbe1ff] px-2 py-0.5 rounded">
+                    {score3} / 5
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={score3}
+                  onChange={(e) => setScore3(parseInt(e.target.value))}
+                  className="w-full accent-[#2563eb]"
                 />
               </div>
             </div>
+
+            {/* Written Feedback */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#191c1e]">
+                Trainer Feedback & Guidance Notes
+              </label>
+              <Textarea
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+                className="text-xs min-h-[90px] bg-[#f7f9fb] border-border rounded-lg"
+              />
+            </div>
           </CardContent>
 
-          <CardFooter className="bg-slate-50 border-t border-slate-100 p-4 flex items-center justify-between">
-            <span className="text-xs text-slate-500">
-              Flipping status to <strong>GRADED</strong> records scores on the intern dashboard.
-            </span>
+          <CardFooter className="p-6 pt-0 border-t border-border flex justify-end gap-3">
             <Button
               onClick={handleGradeSubmit}
               disabled={submitting || !currentRecord}
-              className="bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs h-9 px-5 gap-1.5 shadow-sm"
+              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold h-9 px-5 gap-1.5 shadow-xs rounded-lg"
             >
               <Send className="w-3.5 h-3.5" />
-              {submitting ? 'Submitting Grade...' : 'Save & Grade Day ' + selectedDay}
+              {submitting ? 'Submitting Grade...' : 'Save & Issue Official Feedback'}
             </Button>
           </CardFooter>
         </Card>

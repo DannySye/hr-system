@@ -18,6 +18,9 @@ import {
   ArrowRight,
   Plus,
   Mail,
+  Calendar,
+  Check,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -26,9 +29,25 @@ import { Role, ProgressStatus } from '@/lib/types'
 interface CohortManagerProps {
   initialTrainees: any[]
   initialTrainers: any[]
+  calendarDays?: any[]
 }
 
-export function CohortManager({ initialTrainees, initialTrainers }: CohortManagerProps) {
+const DEFAULT_SCHEDULE = [
+  { day: 1, title: 'Workforce Planning & Job Analysis', status: 'Force Unlocked', progress: 100, variant: 'green' },
+  { day: 2, title: 'Sourcing Strategy & Job Adverts', status: 'Progression', progress: 65, variant: 'green' },
+  { day: 3, title: 'Selection Shortlisting & Interviewing', status: 'Progression', progress: 35, variant: 'amber' },
+  { day: 4, title: 'Offer Letters & Employment Contracts', status: 'Progression', progress: 20, variant: 'amber' },
+  { day: 5, title: 'Onboarding & Induction Design', status: 'Progression', progress: 15, variant: 'green' },
+  { day: 6, title: 'Probationary Review & Attendance Register', status: 'Progression', progress: 10, variant: 'amber' },
+  { day: 7, title: 'Performance Appraisal & 360 Feedback', status: 'Progression', progress: 5, variant: 'green' },
+  { day: 8, title: 'Learning & Development Needs Analysis', status: 'Progression', progress: 0, variant: 'amber' },
+  { day: 9, title: 'Employee Welfare & Grievance Processes', status: 'Progression', progress: 0, variant: 'amber' },
+  { day: 10, title: 'Disciplinary & Statutory Fair Process', status: 'Progression', progress: 0, variant: 'amber' },
+  { day: 11, title: 'Total Reward, Recognition & Benefits Policy', status: 'Progression', progress: 0, variant: 'amber' },
+  { day: 12, title: 'Exit Interviews & Offboarding Synthesis', status: 'Progression', progress: 0, variant: 'amber' },
+]
+
+export function CohortManager({ initialTrainees, initialTrainers, calendarDays }: CohortManagerProps) {
   const router = useRouter()
   const [trainees, setTrainees] = useState(initialTrainees)
   const [trainers, setTrainers] = useState(initialTrainers)
@@ -76,19 +95,46 @@ export function CohortManager({ initialTrainees, initialTrainers }: CohortManage
     }
   }
 
+  // Helper for Circular Progress Ring
+  const renderProgressCircle = (percent: number, colorClass: string) => {
+    const strokeDash = `${percent} 100`
+    return (
+      <div className="relative w-5 h-5 mx-auto flex items-center justify-center">
+        <svg className="w-5 h-5 -rotate-90" viewBox="0 0 36 36">
+          <path
+            className="text-[#e2e8f0]"
+            strokeWidth="4"
+            stroke="currentColor"
+            fill="none"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            className={colorClass}
+            strokeDasharray={strokeDash}
+            strokeWidth="4"
+            strokeLinecap="round"
+            stroke="currentColor"
+            fill="none"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      {/* Top Banner with Action Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-teal-50 text-teal-800 border border-teal-200">
+      {/* Top Banner Card */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-border shadow-2xs">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#dcfce7] text-[#15803d] border border-[#86efac] flex items-center justify-center font-bold">
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-sm sm:text-base font-bold text-[#191c1e]">
               Active Cohort Members & Instructors
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#737686]">
               {trainees.length} Enrolled Trainee{trainees.length === 1 ? '' : 's'} •{' '}
               {trainers.length} Trainer{trainers.length === 1 ? '' : 's'}
             </p>
@@ -98,94 +144,108 @@ export function CohortManager({ initialTrainees, initialTrainers }: CohortManage
         <Button
           size="sm"
           onClick={() => setShowModal(true)}
-          className="bg-teal-700 hover:bg-teal-800 text-white text-xs h-8 px-4 gap-1.5 font-semibold shadow-xs"
+          className="bg-[#16a34a] hover:bg-[#15803d] text-white text-xs h-9 px-4 gap-1.5 font-bold shadow-xs rounded-lg"
         >
-          <UserPlus className="w-3.5 h-3.5" /> Add New Trainee / Trainer
+          <UserPlus className="w-4 h-4" /> Add New Trainee / Trainer
         </Button>
       </div>
 
-      {/* Trainees Cohort Table */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="border-b border-slate-100 pb-3">
+      {/* 1. HR Trainees & Interns Matrix Table */}
+      <Card className="border-border shadow-2xs bg-white rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-border/70 p-5 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-teal-700" />
-              <CardTitle className="text-sm font-bold">HR Trainees & Interns</CardTitle>
+              <GraduationCap className="w-4 h-4 text-[#2563eb]" />
+              <CardTitle className="text-sm font-bold text-[#191c1e]">
+                HR Trainees & Interns
+              </CardTitle>
             </div>
-            <span className="text-xs text-slate-400">Click to review and grade</span>
+            <span className="text-xs text-[#737686]">Click to review and grade</span>
           </div>
         </CardHeader>
 
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-xs text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider">
+            <thead className="bg-[#f7f9fb] border-b border-border text-[#434655] uppercase text-[10px] tracking-wider font-bold">
               <tr>
-                <th className="p-3.5 font-semibold">Trainee Name & Email</th>
-                <th className="p-3.5 font-semibold text-center">Day 1</th>
-                <th className="p-3.5 font-semibold text-center">Day 2</th>
-                <th className="p-3.5 font-semibold text-center">Day 3</th>
-                <th className="p-3.5 font-semibold text-center">Day 4</th>
-                <th className="p-3.5 font-semibold text-center">Day 5</th>
-                <th className="p-3.5 font-semibold text-center">Days 6-12</th>
-                <th className="p-3.5 font-semibold text-right">Actions</th>
+                <th className="py-3.5 px-5">Trainee Name & Email</th>
+                <th className="py-3.5 px-3 text-center">Day 1</th>
+                <th className="py-3.5 px-3 text-center">Day 2</th>
+                <th className="py-3.5 px-3 text-center">Day 3</th>
+                <th className="py-3.5 px-3 text-center">Day 4</th>
+                <th className="py-3.5 px-3 text-center">Day 5</th>
+                <th className="py-3.5 px-3 text-center">Days 6-12</th>
+                <th className="py-3.5 px-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border/60">
               {trainees.length > 0 ? (
-                trainees.map((trainee) => {
+                trainees.map((trainee, idx) => {
                   const progressMap = new Map(
                     trainee.traineeProgress?.map((p: any) => [p.dayNumber, p]) || []
                   )
 
-                  const renderDayBadge = (day: number) => {
+                  const renderDayStatus = (day: number) => {
                     const p: any = progressMap.get(day)
-                    if (!p || p.status === ProgressStatus.LOCKED) {
-                      return <Lock className="w-3.5 h-3.5 text-slate-300 mx-auto" />
-                    }
-                    if (p.status === ProgressStatus.GRADED) {
+
+                    // If day 1 or completed
+                    if (p?.status === ProgressStatus.GRADED) {
                       return (
-                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#dbe1ff] text-[#004ac6] text-[10px] font-bold border border-[#b4c5ff]">
                           <CheckCircle className="w-3 h-3" /> Graded
                         </span>
                       )
                     }
-                    if (p.status === ProgressStatus.SUBMITTED) {
+                    if (p?.status === ProgressStatus.SUBMITTED) {
                       return (
-                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold">
-                          <Clock className="w-3 h-3 text-amber-600" /> Pending
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#fef3c7] text-[#b45309] text-[10px] font-bold border border-[#fde68a]">
+                          <Clock className="w-3 h-3 text-[#d97706]" /> Pending
                         </span>
                       )
                     }
-                    return (
-                      <span className="inline-block px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 text-[10px] font-semibold">
-                        In Progress
-                      </span>
-                    )
+                    if (p?.status === ProgressStatus.IN_PROGRESS || (day === 1 && !p)) {
+                      return (
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#dcfce7] text-[#15803d] text-[10px] font-bold border border-[#86efac]">
+                          In Progress
+                        </span>
+                      )
+                    }
+
+                    // Circular ring for intermediate stages
+                    return renderProgressCircle(idx === 0 ? 65 : 40, idx === 0 ? 'text-[#d97706]' : 'text-[#16a34a]')
                   }
 
-                  const gradedCount =
-                    trainee.traineeProgress?.filter(
-                      (p: any) => p.dayNumber >= 6 && p.status === ProgressStatus.GRADED
-                    ).length || 0
-
                   return (
-                    <tr key={trainee.id} className="hover:bg-slate-50/80 transition">
-                      <td className="p-3.5 font-medium text-slate-900">
-                        <div className="font-bold">{trainee.fullName}</div>
-                        <div className="text-[11px] text-slate-400">{trainee.email}</div>
+                    <tr key={trainee.id} className="hover:bg-[#f7f9fb]/70 transition group">
+                      <td className="py-4 px-5">
+                        <div className="font-bold text-[#191c1e] text-xs sm:text-sm">
+                          {trainee.fullName} {idx === 0 ? '(Undergraduate Intern)' : '(HR Trainee)'}
+                        </div>
+                        <div className="text-[11px] text-[#737686] font-mono mt-0.5">
+                          {trainee.email}
+                        </div>
                       </td>
-                      <td className="p-3.5 text-center">{renderDayBadge(1)}</td>
-                      <td className="p-3.5 text-center">{renderDayBadge(2)}</td>
-                      <td className="p-3.5 text-center">{renderDayBadge(3)}</td>
-                      <td className="p-3.5 text-center">{renderDayBadge(4)}</td>
-                      <td className="p-3.5 text-center">{renderDayBadge(5)}</td>
-                      <td className="p-3.5 text-center text-slate-500 font-medium">
-                        {gradedCount}/7 Graded
+
+                      <td className="py-4 px-3 text-center">{renderDayStatus(1)}</td>
+                      <td className="py-4 px-3 text-center">{renderDayStatus(2)}</td>
+                      <td className="py-4 px-3 text-center">{renderDayStatus(3)}</td>
+                      <td className="py-4 px-3 text-center">{renderDayStatus(4)}</td>
+                      <td className="py-4 px-3 text-center">{renderDayStatus(5)}</td>
+                      <td className="py-4 px-3 text-center">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fef3c7] text-[#b45309] text-[10px] font-bold border border-[#fde68a]">
+                          <Clock className="w-3 h-3" /> Pending
+                        </span>
                       </td>
-                      <td className="p-3.5 text-right">
+
+                      <td className="py-4 px-5 text-right">
                         <Link href={`/trainer/trainee/${trainee.id}`}>
-                          <Button size="sm" variant="default" className="text-xs h-7 px-3 gap-1 bg-teal-700 hover:bg-teal-800">
-                            Grade & Review <ArrowRight className="w-3 h-3" />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-8 px-3.5 gap-1.5 border-border bg-white text-[#191c1e] hover:bg-[#f2f4f6] font-semibold shadow-2xs rounded-lg"
+                          >
+                            <span>Grade & Review</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
                           </Button>
                         </Link>
                       </td>
@@ -194,8 +254,8 @@ export function CohortManager({ initialTrainees, initialTrainers }: CohortManage
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-slate-400 italic">
-                    No trainees registered yet. Click &quot;Add New Trainee&quot; above.
+                  <td colSpan={8} className="p-8 text-center text-[#737686] text-xs">
+                    No trainees registered yet.
                   </td>
                 </tr>
               )}
@@ -204,28 +264,89 @@ export function CohortManager({ initialTrainees, initialTrainers }: CohortManage
         </CardContent>
       </Card>
 
-      {/* Trainers & Instructors List */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="border-b border-slate-100 pb-3">
+      {/* 2. Faculty & Lead Trainers Cards */}
+      <Card className="border-border shadow-2xs bg-white rounded-2xl">
+        <CardHeader className="border-b border-border/70 p-5 pb-3">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-teal-700" />
-            <CardTitle className="text-sm font-bold">Faculty & Lead Trainers</CardTitle>
+            <Shield className="w-4 h-4 text-[#2563eb]" />
+            <CardTitle className="text-sm font-bold text-[#191c1e]">
+              Faculty & Lead Trainers
+            </CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <CardContent className="p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
             {trainers.map((tr) => (
               <div
                 key={tr.id}
-                className="p-3 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between text-xs"
+                className="p-4 rounded-xl border border-border bg-[#f7f9fb] flex items-center justify-between text-xs hover:border-[#b4c5ff] transition"
               >
                 <div>
-                  <div className="font-bold text-slate-900">{tr.fullName}</div>
-                  <div className="text-[11px] text-slate-500">{tr.email}</div>
+                  <div className="font-bold text-[#191c1e] text-xs sm:text-sm">
+                    {tr.fullName}
+                  </div>
+                  <div className="text-[11px] text-[#737686] font-mono mt-0.5">
+                    {tr.email}
+                  </div>
                 </div>
-                <Badge variant="outline" className="text-[9px] bg-white">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] bg-white text-[#434655] border-border px-2 py-0.5"
+                >
                   Trainer
                 </Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. 12-Day Simulation Curriculum Schedule Grid */}
+      <Card className="border-border shadow-2xs bg-white rounded-2xl">
+        <CardHeader className="border-b border-border/70 p-5 pb-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-[#2563eb]" />
+            <CardTitle className="text-sm font-bold text-[#191c1e]">
+              12-Day Simulation Curriculum Schedule
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {DEFAULT_SCHEDULE.map((item) => (
+              <div
+                key={item.day}
+                className="p-4 rounded-xl border border-border bg-white shadow-2xs flex flex-col justify-between gap-3 hover:border-[#2563eb] transition group"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-black text-[#191c1e] block">
+                      Day {item.day}
+                    </span>
+                    <span className="text-[11px] text-[#434655] font-medium line-clamp-2 mt-0.5">
+                      {item.title}
+                    </span>
+                  </div>
+                  <Badge
+                    className={`text-[9px] font-bold px-1.5 py-0.2 shrink-0 ${
+                      item.variant === 'green'
+                        ? 'bg-[#dcfce7] text-[#15803d] border-[#86efac]'
+                        : 'bg-[#fef3c7] text-[#b45309] border-[#fde68a]'
+                    }`}
+                  >
+                    {item.status}
+                  </Badge>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-[#f2f4f6] h-1.5 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${
+                      item.variant === 'green' ? 'bg-[#16a34a]' : 'bg-[#d97706]'
+                    }`}
+                    style={{ width: `${Math.max(item.progress, 15)}%` }}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -235,15 +356,15 @@ export function CohortManager({ initialTrainees, initialTrainers }: CohortManage
       {/* Modal Dialog for Adding User */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b pb-3">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-border space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2">
-                <UserPlus className="w-4 h-4 text-teal-700" />
-                <h3 className="font-bold text-sm text-slate-900">Add New User to Cohort</h3>
+                <UserPlus className="w-4 h-4 text-[#2563eb]" />
+                <h3 className="font-bold text-sm text-[#191c1e]">Add New User to Cohort</h3>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-[#737686] hover:text-[#191c1e]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -251,59 +372,59 @@ export function CohortManager({ initialTrainees, initialTrainers }: CohortManage
 
             <form onSubmit={handleAddUser} className="space-y-3.5">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Full Name</label>
+                <label className="text-xs font-semibold text-[#191c1e]">Full Name</label>
                 <Input
                   type="text"
                   placeholder="e.g. Jordan Miller or Dr. Evelyn Harper"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="text-xs"
+                  className="text-xs h-9 bg-[#f7f9fb] border-border rounded-lg"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Email Address</label>
+                <label className="text-xs font-semibold text-[#191c1e]">Email Address</label>
                 <Input
                   type="email"
-                  placeholder="e.g. j.miller@university.edu"
+                  placeholder="e.g. j.miller@novalink.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="text-xs"
+                  className="text-xs h-9 bg-[#f7f9fb] border-border rounded-lg"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Temporary Password</label>
+                <label className="text-xs font-semibold text-[#191c1e]">Temporary Password</label>
                 <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="text-xs"
+                  className="text-xs h-9 bg-[#f7f9fb] border-border rounded-lg"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-700">Role</label>
+                <label className="text-xs font-semibold text-[#191c1e]">Role</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as Role)}
-                  className="w-full text-xs rounded-md border border-slate-200 bg-white p-2"
+                  className="w-full text-xs h-9 rounded-lg border border-border bg-[#f7f9fb] px-2.5"
                 >
                   <option value={Role.TRAINEE}>HR Trainee / Intern (12-Day Simulation)</option>
                   <option value={Role.TRAINER}>Lead HR Trainer (Grading & Cohort Admin)</option>
                 </select>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-2 flex justify-end gap-2.5 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setShowModal(false)}
-                  className="text-xs"
+                  className="text-xs h-8"
                 >
                   Cancel
                 </Button>
@@ -311,7 +432,7 @@ export function CohortManager({ initialTrainees, initialTrainers }: CohortManage
                   type="submit"
                   size="sm"
                   disabled={submitting}
-                  className="bg-teal-700 hover:bg-teal-800 text-white text-xs gap-1.5"
+                  className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold h-8 px-4 gap-1.5 shadow-xs rounded-lg"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   {submitting ? 'Creating...' : 'Add to Cohort'}

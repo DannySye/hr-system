@@ -2,37 +2,35 @@ import React from 'react'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { getTraineeFullTimeline } from '@/lib/day-gating'
-import { ProgressStepper } from '@/components/shared/ProgressStepper'
-import { ContinuousThreadsPanel } from '@/components/shared/ContinuousThreadsPanel'
-import { PeopleDirectory } from '@/components/shared/PeopleDirectory'
+import { prisma } from '@/lib/prisma'
 import { FrappeSidebar } from '@/components/frappe/FrappeSidebar'
-import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { PeopleDirectory } from '@/components/shared/PeopleDirectory'
+import { AttendanceRegisterTable } from '@/components/shared/AttendanceRegisterTable'
+import { LeaveManagementCard } from '@/components/shared/LeaveManagementCard'
+import { CohortManager } from '@/components/trainer/CohortManager'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import {
-  ArrowRight,
-  Play,
-  Award,
-  Sparkles,
-  MessageSquare,
-  BookOpen,
-  Layers,
-  Activity,
-  Users,
-  Briefcase,
-  Compass,
-  CheckCircle2,
-  Shield,
-  Clock,
-  Plane,
-  Plus,
-  FileText,
-  HelpCircle,
-} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ProgressStatus } from '@/lib/types'
+import {
+  Users,
+  Clock,
+  Calendar,
+  Layers,
+  Sparkles,
+  ArrowRight,
+  TrendingUp,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+  Briefcase,
+  Award,
+  ChevronRight,
+  Compass,
+  GraduationCap,
+} from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 export default async function TraineeDashboardPage() {
   const session = await getServerSession(authOptions)
@@ -41,243 +39,276 @@ export default async function TraineeDashboardPage() {
     redirect('/login')
   }
 
-  const timeline = await getTraineeFullTimeline(session.user.id)
+  // Fetch employees
+  const employees = await prisma.employee.findMany({
+    include: {
+      position: {
+        include: { department: true },
+      },
+    },
+    orderBy: { startDate: 'asc' },
+  })
 
-  // Determine current active day
-  const currentActiveDay =
-    timeline.find((t) => t.status === ProgressStatus.IN_PROGRESS) ||
-    timeline.find((t) => t.isUnlocked && t.status !== ProgressStatus.GRADED) ||
-    timeline[0]
+  // Fetch simulation calendar
+  const calendarDays = await prisma.simulationCalendar.findMany({
+    orderBy: { dayNumber: 'asc' },
+  })
 
-  const completedCount = timeline.filter(
-    (t) => t.status === ProgressStatus.SUBMITTED || t.status === ProgressStatus.GRADED
+  // Fetch trainee progress
+  const progressList = await prisma.traineeProgress.findMany({
+    where: { traineeId: session.user.id },
+    orderBy: { dayNumber: 'asc' },
+  })
+
+  // Fetch all trainees and trainers for the cohort view
+  const trainees = await prisma.user.findMany({
+    where: { role: 'TRAINEE' },
+    include: {
+      traineeProgress: {
+        include: { feedback: true },
+        orderBy: { dayNumber: 'asc' },
+      },
+      tutorialProgress: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const trainers = await prisma.user.findMany({
+    where: { role: 'TRAINER' },
+    orderBy: { createdAt: 'asc' },
+  })
+
+  const completedDaysCount = progressList.filter(
+    (p) => p.status === 'SUBMITTED' || p.status === 'GRADED'
   ).length
 
   return (
-    <div className="flex min-h-[calc(100vh-3rem)] bg-[#F8F9FA]">
-      {/* Frappe Left Sidebar */}
+    <div className="flex min-h-[calc(100vh-4rem)] bg-[#f7f9fb]">
+      {/* Stitch Modern SaaS Sidebar */}
       <FrappeSidebar />
 
-      {/* Main Frappe Desk Workspace */}
-      <main className="flex-1 p-4 sm:p-6 space-y-5 max-w-7xl overflow-x-hidden">
-        {/* Frappe Breadcrumb & Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+      {/* Main Content Desk */}
+      <main className="flex-1 p-6 lg:p-8 space-y-6 max-w-7xl overflow-x-hidden">
+        {/* Header Breadcrumb & Actions Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
           <div>
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-0.5">
-              <span>Home</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#737686] mb-1">
+              <span className="font-semibold text-[#191c1e]">NovaLink Enterprise</span>
               <span>/</span>
-              <span className="font-semibold text-slate-800">HR Desk</span>
-              <span>/</span>
-              <span className="text-teal-700 font-medium">Practicum Workspace</span>
+              <span className="text-[#2563eb] font-medium">HR Operations Console</span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              HR Operations Desk
-              <Badge variant="outline" className="text-[10px] font-normal bg-white">
-                Live Simulation
+            <h1 className="text-2xl font-bold tracking-tight text-[#191c1e] flex items-center gap-2">
+              HR Faculty & Operations Desk
+              <Badge variant="outline" className="text-[10px] bg-[#dbe1ff] text-[#00174b] border-[#b4c5ff]">
+                Live Practicum
               </Badge>
             </h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            {currentActiveDay && (
-              <Link href={`/day/${currentActiveDay.dayNumber}`}>
-                <Button size="sm" className="h-8 text-xs bg-teal-700 hover:bg-teal-800 text-white font-semibold gap-1.5 shadow-xs">
-                  <Play className="w-3 h-3 fill-current" />
-                  Resume Day {currentActiveDay.dayNumber}: {currentActiveDay.title.split('&')[0]}
-                </Button>
-              </Link>
-            )}
+          <div className="flex items-center gap-2.5">
+            <Link href="/careers" target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-semibold gap-1.5 border-border bg-white hover:bg-[#f2f4f6] text-[#191c1e]"
+              >
+                <Compass className="w-3.5 h-3.5 text-[#2563eb]" /> Public Careers Portal
+              </Button>
+            </Link>
+            <Link href={`/day/${Math.min(completedDaysCount + 1, 12)}`}>
+              <Button
+                size="sm"
+                className="h-8 text-xs font-semibold bg-[#2563eb] hover:bg-[#1d4ed8] text-white gap-1.5 shadow-xs"
+              >
+                <span>Continue Day {Math.min(completedDaysCount + 1, 12)}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
           </div>
         </div>
 
-        {/* Frappe Number Cards (KPI Grid) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Card 1: Total Employees */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center justify-between">
-              Total Employees <Users className="w-3.5 h-3.5 text-slate-400" />
-            </span>
-            <div className="text-xl font-bold text-slate-900">4 Staff</div>
-            <p className="text-[10px] text-emerald-700 font-medium">+1 Open Requisition</p>
-          </div>
-
-          {/* Card 2: Punctuality Index */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center justify-between">
-              Attendance Index <Clock className="w-3.5 h-3.5 text-slate-400" />
-            </span>
-            <div className="text-xl font-bold text-slate-900">92.4%</div>
-            <p className="text-[10px] text-amber-700 font-medium">4 Lateness Flags Monitored</p>
-          </div>
-
-          {/* Card 3: Leave Utilization */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center justify-between">
-              Avg Leave Accrual <Plane className="w-3.5 h-3.5 text-slate-400" />
-            </span>
-            <div className="text-xl font-bold text-slate-900">22.4 Days</div>
-            <p className="text-[10px] text-blue-700 font-medium">1 Request In Queue</p>
-          </div>
-
-          {/* Card 4: Simulation Progression */}
-          <div className="p-3.5 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center justify-between">
-              Curriculum Stage <Layers className="w-3.5 h-3.5 text-teal-700" />
-            </span>
-            <div className="text-xl font-bold text-teal-900">
-              Day {currentActiveDay?.dayNumber || 1} / 12
+        {/* Top 4 KPI Number Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Card 1 */}
+          <div className="bg-white border border-border rounded-xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden group shadow-2xs hover:shadow-card-hover transition-all">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#2563eb]/5 rounded-full blur-xl group-hover:bg-[#2563eb]/10 transition-colors"></div>
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-[#434655]">Total Active Personnel</span>
+              <div className="w-8 h-8 rounded-lg bg-[#f2f4f6] flex items-center justify-center text-[#191c1e]">
+                <Users className="w-4 h-4 text-[#2563eb]" />
+              </div>
             </div>
-            <p className="text-[10px] text-slate-500 font-medium">
-              {completedCount} Completed • {12 - completedCount} Remaining
-            </p>
-          </div>
-        </div>
-
-        {/* Frappe Workspace Tabs */}
-        <Tabs defaultValue="roadmap" className="space-y-4">
-          <div className="bg-white rounded-lg border border-slate-200 p-1 shadow-2xs">
-            <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full bg-slate-100/70 p-1">
-              <TabsTrigger
-                value="roadmap"
-                className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 gap-1.5 h-7"
-              >
-                <Layers className="w-3.5 h-3.5 text-teal-700" />
-                <span>Simulation Roadmap</span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="directory"
-                className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 gap-1.5 h-7"
-              >
-                <Users className="w-3.5 h-3.5 text-teal-700" />
-                <span>Employee Master</span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="operations"
-                className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 gap-1.5 h-7"
-              >
-                <Activity className="w-3.5 h-3.5 text-teal-700" />
-                <span>Registers & Operations</span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="feedback"
-                className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-slate-900 gap-1.5 h-7"
-              >
-                <MessageSquare className="w-3.5 h-3.5 text-teal-700" />
-                <span>Trainer Feedback</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* TAB 1: 12-DAY LIFECYCLE ROADMAP */}
-          <TabsContent value="roadmap" className="space-y-4 m-0">
-            <ProgressStepper timeline={timeline} currentDay={currentActiveDay?.dayNumber} />
-
-            {/* Frappe Shortcuts Grid */}
-            <div className="space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 px-1">
-                HR Governance & Policy Manuals
+            <div>
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight text-[#191c1e]">
+                {employees.length} Staff
               </span>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Link
-                  href="/tutorials/workforce-planning"
-                  className="p-3.5 bg-white rounded-lg border border-slate-200 hover:border-teal-600 transition shadow-2xs group"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-slate-900 group-hover:text-teal-700">
-                      Workforce Planning & Job Analysis
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-teal-700" />
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Equality Act 2010 compliance, vacancy requisition rules & job description benchmarks.
-                  </p>
-                </Link>
-
-                <Link
-                  href="/tutorials/selection-shortlisting"
-                  className="p-3.5 bg-white rounded-lg border border-slate-200 hover:border-teal-600 transition shadow-2xs group"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-slate-900 group-hover:text-teal-700">
-                      Selection & Competency Interviewing
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-teal-700" />
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    STAR structured methodology, weighted candidate evaluation & statutory offer letters.
-                  </p>
-                </Link>
-
-                <Link
-                  href="/tutorials/onboarding-retention"
-                  className="p-3.5 bg-white rounded-lg border border-slate-200 hover:border-teal-600 transition shadow-2xs group"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-xs text-slate-900 group-hover:text-teal-700">
-                      Statutory Disciplinary Fair Process
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-teal-700" />
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    ACAS Code of Practice, natural justice, formal hearing protocols & appeals.
-                  </p>
-                </Link>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="text-xs font-semibold text-[#004ac6] flex items-center gap-0.5">
+                  <TrendingUp className="w-3.5 h-3.5" /> +1 Requisition Active
+                </span>
               </div>
             </div>
-          </TabsContent>
+          </div>
 
-          {/* TAB 2: EMPLOYEE MASTER DIRECTORY */}
-          <TabsContent value="directory" className="m-0">
-            <PeopleDirectory />
-          </TabsContent>
+          {/* Card 2 */}
+          <div className="bg-white border border-border rounded-xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden group shadow-2xs hover:shadow-card-hover transition-all">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#d0e1fb]/40 rounded-full blur-xl group-hover:bg-[#d0e1fb]/60 transition-colors"></div>
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-[#434655]">Attendance Reliability</span>
+              <div className="w-8 h-8 rounded-lg bg-[#f2f4f6] flex items-center justify-center text-[#191c1e]">
+                <Clock className="w-4 h-4 text-[#505f76]" />
+              </div>
+            </div>
+            <div>
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight text-[#191c1e]">
+                94.2%
+              </span>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="text-xs font-semibold text-[#004ac6] flex items-center gap-0.5">
+                  <TrendingUp className="w-3.5 h-3.5" /> +2.1% from last cycle
+                </span>
+              </div>
+            </div>
+          </div>
 
-          {/* TAB 3: CONTINUOUS OPERATIONS & REGISTERS */}
-          <TabsContent value="operations" className="m-0">
-            <ContinuousThreadsPanel currentDay={currentActiveDay?.dayNumber || 1} />
-          </TabsContent>
+          {/* Card 3 */}
+          <div className="bg-white border border-border rounded-xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden group shadow-2xs hover:shadow-card-hover transition-all">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#ffede6]/50 rounded-full blur-xl group-hover:bg-[#ffede6]/70 transition-colors"></div>
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-[#434655]">Avg Leave Balance</span>
+              <div className="w-8 h-8 rounded-lg bg-[#f2f4f6] flex items-center justify-center text-[#191c1e]">
+                <Calendar className="w-4 h-4 text-[#bc4800]" />
+              </div>
+            </div>
+            <div>
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight text-[#191c1e]">
+                22.4 Days
+              </span>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="text-xs text-[#737686]">1 Request in Approval Queue</span>
+              </div>
+            </div>
+          </div>
 
-          {/* TAB 4: TRAINER FEEDBACK */}
-          <TabsContent value="feedback" className="m-0">
-            <div className="bg-white rounded-lg border border-slate-200 p-5 shadow-2xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">Faculty Evaluations & Rubrics</h3>
-                  <p className="text-xs text-slate-500">Formal grade reports issued by Lead Trainers.</p>
-                </div>
+          {/* Card 4 */}
+          <div className="bg-white border border-border rounded-xl p-5 flex flex-col justify-between gap-4 relative overflow-hidden group shadow-2xs hover:shadow-card-hover transition-all">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-[#dbe1ff]/60 rounded-full blur-xl group-hover:bg-[#dbe1ff]/80 transition-colors"></div>
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-[#434655]">Practicum Progress</span>
+              <div className="w-8 h-8 rounded-lg bg-[#f2f4f6] flex items-center justify-center text-[#191c1e]">
+                <Award className="w-4 h-4 text-[#2563eb]" />
+              </div>
+            </div>
+            <div>
+              <span className="text-2xl sm:text-3xl font-bold tracking-tight text-[#191c1e]">
+                Day {completedDaysCount} / 12
+              </span>
+              <div className="flex items-center gap-1.5 mt-1.5">
+                <span className="text-xs font-bold text-[#004ac6]">
+                  {Math.round((completedDaysCount / 12) * 100)}% Curriculum Mastered
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 12-Column Grid: Workspaces Tabs */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 space-y-6">
+            <div className="bg-white border border-border rounded-xl p-5 shadow-2xs">
+              <Tabs defaultValue="cohort" className="w-full">
+                <TabsList className="grid grid-cols-4 w-full bg-[#f2f4f6] p-1 rounded-lg">
+                  <TabsTrigger value="cohort" className="text-xs font-semibold py-1.5 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs">
+                    Faculty & Cohort
+                  </TabsTrigger>
+                  <TabsTrigger value="directory" className="text-xs font-semibold py-1.5 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs">
+                    Staff Directory
+                  </TabsTrigger>
+                  <TabsTrigger value="attendance" className="text-xs font-semibold py-1.5 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs">
+                    Attendance
+                  </TabsTrigger>
+                  <TabsTrigger value="leaves" className="text-xs font-semibold py-1.5 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs">
+                    Leave Accruals
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* TAB 1: FACULTY & COHORT OVERVIEW */}
+                <TabsContent value="cohort" className="pt-4 space-y-4">
+                  <CohortManager
+                    initialTrainees={trainees}
+                    initialTrainers={trainers}
+                    calendarDays={calendarDays}
+                  />
+                </TabsContent>
+
+                {/* TAB 2: STAFF DIRECTORY */}
+                <TabsContent value="directory" className="pt-4">
+                  <PeopleDirectory employees={employees} />
+                </TabsContent>
+
+                {/* TAB 3: ATTENDANCE */}
+                <TabsContent value="attendance" className="pt-4">
+                  <AttendanceRegisterTable />
+                </TabsContent>
+
+                {/* TAB 4: LEAVES */}
+                <TabsContent value="leaves" className="pt-4">
+                  <LeaveManagementCard />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+
+          {/* Right Column (4 cols): Live Activity */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white border border-border rounded-xl p-5 shadow-2xs flex flex-col h-full">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="font-bold text-sm text-[#191c1e]">Live Audit Activity</h2>
+                <span className="text-[10px] font-mono text-[#004ac6] bg-[#dbe1ff] px-2 py-0.5 rounded font-bold">
+                  Active
+                </span>
               </div>
 
-              {timeline.some((t) => t.feedback) ? (
-                <div className="space-y-3">
-                  {timeline
-                    .filter((t) => t.feedback)
-                    .map((t) => (
-                      <div
-                        key={t.dayNumber}
-                        className="p-3.5 rounded-lg bg-teal-50/70 border border-teal-200 text-xs space-y-1.5"
-                      >
-                        <div className="flex items-center justify-between font-bold text-slate-900">
-                          <span>
-                            Day {t.dayNumber}: {t.title}
-                          </span>
-                          <Badge variant="default" className="bg-emerald-700 text-white text-[9px]">
-                            Graded
-                          </Badge>
-                        </div>
-                        <p className="text-slate-700 text-xs">{t.feedback?.comments}</p>
-                      </div>
-                    ))}
+              <div className="flex flex-col gap-4 overflow-y-auto pr-1 relative">
+                {/* Event 1 */}
+                <div className="flex gap-3 group">
+                  <div className="w-8 h-8 rounded-full bg-[#dbe1ff] text-[#004ac6] flex items-center justify-center shrink-0 shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col text-xs">
+                    <span className="font-bold text-[#191c1e]">Day 1 JD Authorized</span>
+                    <span className="text-[#434655] text-[11px]">Marcus Chen approved Field Engineer JD.</span>
+                    <span className="text-[10px] text-[#737686] mt-0.5">Today, 09:30 AM</span>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-10 text-slate-400 text-xs italic">
-                  No submissions graded yet. Complete and submit Day 1 to receive trainer rubric evaluations.
+
+                {/* Event 2 */}
+                <div className="flex gap-3 group">
+                  <div className="w-8 h-8 rounded-full bg-[#d0e1fb] text-[#0b1c30] flex items-center justify-center shrink-0 shadow-2xs">
+                    <Compass className="w-4 h-4 text-[#2563eb]" />
+                  </div>
+                  <div className="flex flex-col text-xs">
+                    <span className="font-bold text-[#191c1e]">Candidate Sourcing Live</span>
+                    <span className="text-[#434655] text-[11px]">Published to NovaLink Careers Portal.</span>
+                    <span className="text-[10px] text-[#737686] mt-0.5">Today, 10:15 AM</span>
+                  </div>
                 </div>
-              )}
+
+                {/* Event 3 */}
+                <div className="flex gap-3 group">
+                  <div className="w-8 h-8 rounded-full bg-[#dcfce7] text-[#15803d] flex items-center justify-center shrink-0 shadow-2xs">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col text-xs">
+                    <span className="font-bold text-[#191c1e]">Candidate Screened</span>
+                    <span className="text-[#434655] text-[11px]">Jordan Hayes verified in ATS matrix.</span>
+                    <span className="text-[10px] text-[#737686] mt-0.5">Today, 11:45 AM</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </main>
     </div>
   )

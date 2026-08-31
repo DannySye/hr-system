@@ -7,45 +7,74 @@ import { ProgressStatus } from "@/lib/types"
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || session.user.role !== 'TRAINER') {
-      return NextResponse.json({ error: 'Unauthorized: Trainer role required' }, { status: 403 })
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized: Session required' }, { status: 401 })
     }
 
     const body = await req.json()
-    const { traineeProgressId, rubricScores, comments } = body
+    const { traineeProgressId, rubricScores = {}, comments = '', status = 'GRADED' } = body
 
-    if (!traineeProgressId || !comments) {
+    if (!traineeProgressId) {
       return NextResponse.json(
-        { error: 'traineeProgressId and feedback comments are required' },
+        { error: 'traineeProgressId is required' },
         { status: 400 }
       )
     }
+
+    const scoresString = typeof rubricScores === 'string' ? rubricScores : JSON.stringify(rubricScores)
+    const feedbackComments = comments || 'Deliverable approved and graded by HR Assessor.'
 
     // Upsert TrainerFeedback
     const feedback = await prisma.trainerFeedback.upsert({
       where: { traineeProgressId },
       create: {
         traineeProgressId,
-        rubricScores: rubricScores || {},
-        comments,
+        rubricScores: scoresString,
+        comments: feedbackComments,
       },
       update: {
-        rubricScores: rubricScores || {},
-        comments,
+        rubricScores: scoresString,
+        comments: feedbackComments,
         gradedAt: new Date(),
       },
     })
 
-    // Update status to GRADED
-    await prisma.traineeProgress.update({
+    // Update status to GRADED in TraineeProgress
+    const updatedProgress = await prisma.traineeProgress.update({
       where: { id: traineeProgressId },
-      data: { status: ProgressStatus.GRADED },
+      data: {
+        status: status === 'REVISION_REQUESTED' ? ProgressStatus.IN_PROGRESS : ProgressStatus.GRADED,
+      },
+      include: {
+        trainee: true,
+      },
     })
+
+    // If day was completed, ensure next day is unlocked for trainee
+    if (updatedProgress.dayNumber < 12 && status !== 'REVISION_REQUESTED') {
+      await prisma.traineeProgress.upsert({
+        where: {
+          traineeId_dayNumber: {
+            traineeId: updatedProgress.traineeId,
+            dayNumber: updatedProgress.dayNumber + 1,
+          },
+        },
+        create: {
+          traineeId: updatedProgress.traineeId,
+          dayNumber: updatedProgress.dayNumber + 1,
+          status: ProgressStatus.IN_PROGRESS,
+        },
+        update: {
+          status: ProgressStatus.IN_PROGRESS,
+        },
+      })
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Grading rubric and comments saved successfully.',
+      message: `Trainee deliverable for Day ${updatedProgress.dayNumber} has been graded and approved in the HR System.`,
       feedback,
+      progress: updatedProgress,
     })
   } catch (error: any) {
     console.error('Grading error:', error)

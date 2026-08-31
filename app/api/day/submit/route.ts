@@ -16,14 +16,40 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { dayNumber, phaseSlug, deliverableData } = body
 
-    if (!dayNumber || !phaseSlug) {
+    const num = parseInt(String(dayNumber), 10)
+    if (isNaN(num) || num < 1 || num > 12) {
       return NextResponse.json(
-        { error: 'dayNumber and phaseSlug are required' },
+        { error: 'Invalid day number (must be between 1 and 12)' },
         { status: 400 }
       )
     }
 
-    // 1. Enforce server-side tutorial engagement gating
+    // 1. Enforce strict sequential phase progression
+    if (num > 1) {
+      const prevProgress = await prisma.traineeProgress.findUnique({
+        where: {
+          traineeId_dayNumber: {
+            traineeId,
+            dayNumber: num - 1,
+          },
+        },
+      })
+
+      const isPrevComplete =
+        prevProgress?.status === ProgressStatus.SUBMITTED ||
+        prevProgress?.status === ProgressStatus.GRADED
+
+      if (!isPrevComplete) {
+        return NextResponse.json(
+          {
+            error: `Prerequisite Incomplete: You must complete and submit Day ${num - 1} before Day ${num} can be finalized.`,
+          },
+          { status: 403 }
+        )
+      }
+    }
+
+    // 2. Enforce server-side tutorial engagement gating
     try {
       await assertTutorialCompleted(traineeId, phaseSlug)
     } catch (gatingErr: any) {
@@ -33,7 +59,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 2. Flip TraineeProgress for this day to SUBMITTED
+    // 3. Flip TraineeProgress for this day to SUBMITTED
     const progress = await prisma.traineeProgress.upsert({
       where: {
         traineeId_dayNumber: {

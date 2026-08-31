@@ -163,9 +163,10 @@ export function VoiceInterviewRoom({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+          message: content,
+          history: messages.map((m) => ({ role: m.role, content: m.content })),
+          persona,
           personaId: persona.id,
-          personaOverride: persona,
           interviewType,
           dayNumber,
         }),
@@ -195,15 +196,28 @@ export function VoiceInterviewRoom({
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-          const chunk = decoder.decode(value, { stream: true })
+          const rawChunk = decoder.decode(value, { stream: true })
           
-          // Parse data stream text chunks if formatted as 0:"text"
-          const cleanChunk = chunk.replace(/^[0-9]+:"/gm, '').replace(/"\n/gm, '')
-          assistantReply += cleanChunk
+          // Parse data stream text chunks formatted as 0:"text"
+          const lines = rawChunk.split('\n')
+          for (const line of lines) {
+            if (line.startsWith('0:')) {
+              try {
+                const textChunk = JSON.parse(line.slice(2))
+                assistantReply += textChunk
+              } catch {
+                assistantReply += line.slice(2).replace(/^"/, '').replace(/"$/, '')
+              }
+            } else if (line && !line.startsWith('d:') && !line.startsWith('e:') && !line.startsWith('f:')) {
+              if (!line.includes(':')) {
+                assistantReply += line
+              }
+            }
+          }
 
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === assistantMsgId ? { ...msg, content: assistantReply } : msg
+              msg.id === assistantMsgId ? { ...msg, content: assistantReply || '...' } : msg
             )
           )
         }
@@ -214,7 +228,7 @@ export function VoiceInterviewRoom({
       }
     } catch (err) {
       console.error('Chat error:', err)
-      toast.error('AI streaming error. Persona response simulated locally.')
+      toast.error('Simulation response error. Please try again.')
     } finally {
       setIsLoading(false)
     }

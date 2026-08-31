@@ -28,6 +28,8 @@ export default withAuth(
         // Public paths
         if (
           path === '/login' ||
+          path.startsWith('/careers') ||
+          path.startsWith('/api/careers') ||
           path.startsWith('/api/auth') ||
           path.startsWith('/_next') ||
           path.startsWith('/favicon.ico')
@@ -48,6 +50,7 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/day/:path*',
+    '/hr/:path*',
     '/tutorials/:path*',
     '/trainer/:path*',
     '/api/tutorial/:path*',

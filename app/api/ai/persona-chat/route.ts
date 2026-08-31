@@ -14,16 +14,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const body = await req.json()
     const {
       persona,
+      personaOverride,
       personaId,
-      message,
-      history = [],
+      message: explicitMessage,
+      messages = [],
+      history: explicitHistory = [],
       interviewType = InterviewType.SCOPING,
       dayNumber = 1,
-    } = await req.json()
+    } = body
 
-    let targetPersona = persona
+    // Extract active message & history regardless of client format
+    let activeMessage = explicitMessage || ''
+    let activeHistory = [...explicitHistory]
+
+    if (!activeMessage && Array.isArray(messages) && messages.length > 0) {
+      const lastUserMsg = [...messages].reverse().find((m: any) => m.role === 'user')
+      if (lastUserMsg) {
+        activeMessage = lastUserMsg.content || ''
+        const lastIdx = messages.lastIndexOf(lastUserMsg)
+        activeHistory = messages.slice(0, lastIdx)
+      }
+    }
+
+    let targetPersona = personaOverride || persona
 
     if (!targetPersona && personaId) {
       const dbPersona = await prisma.aiPersona.findUnique({
@@ -44,8 +60,8 @@ export async function POST(req: NextRequest) {
       targetPersona = {
         name: 'Marcus Chen',
         personaType: PersonaType.MANAGER,
-        backgroundBrief: 'Head of Engineering at NovaLink scoping a backend engineer vacancy.',
-        personalityNotes: 'Direct, technical, values system throughput.',
+        backgroundBrief: 'Head of Engineering at NovaLink scoping a field engineer vacancy.',
+        personalityNotes: 'Direct, technical, values network reliability.',
         qualityTier: QualityTier.STRONG,
       }
     }
@@ -53,25 +69,28 @@ export async function POST(req: NextRequest) {
     const systemPrompt = buildPersonaSystemPrompt(targetPersona, interviewType, dayNumber)
 
     // Option A: Free Google Gemini Flash-Lite API if key exists in env
-    if (process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY) {
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY
+    if (apiKey && apiKey.trim() !== '') {
       try {
-        const modelName = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite'
+        const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite'
+        const formattedMessages = [
+          ...activeHistory.map((h: any) => ({
+            role: h.role === 'user' ? ('user' as const) : ('assistant' as const),
+            content: String(h.content || ''),
+          })),
+          { role: 'user' as const, content: String(activeMessage || 'Hello') },
+        ]
+
         const result = await streamText({
           model: google(modelName),
           system: systemPrompt,
-          messages: [
-            ...history.map((h: any) => ({
-              role: h.role === 'user' ? 'user' : 'assistant',
-              content: h.content,
-            })),
-            { role: 'user', content: message },
-          ],
+          messages: formattedMessages,
           temperature: 0.7,
         })
 
         return result.toDataStreamResponse()
       } catch (geminiError) {
-        console.warn('Gemini Flash-Lite API call failed, falling back to local simulation engine:', geminiError)
+        console.warn('Gemini API call failed, seamlessly falling back to local simulation engine:', geminiError)
       }
     }
 
@@ -80,8 +99,8 @@ export async function POST(req: NextRequest) {
       targetPersona,
       interviewType,
       dayNumber,
-      message,
-      history.length + 1
+      activeMessage || 'Hello',
+      activeHistory.length + 1
     )
 
     // Stream the simulated response formatted for Vercel AI SDK data stream
@@ -95,7 +114,7 @@ export async function POST(req: NextRequest) {
           const payload = `0:${JSON.stringify(chunk)}\n`
           controller.enqueue(encoder.encode(payload))
           // Realistic speech pacing delay
-          await new Promise((resolve) => setTimeout(resolve, 35))
+          await new Promise((resolve) => setTimeout(resolve, 30))
         }
         controller.close()
       },

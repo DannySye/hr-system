@@ -6,6 +6,8 @@ import { VoiceInterviewRoom } from '@/components/shared/VoiceInterviewRoom'
 import { TutorialPanel } from '@/components/tutorial/TutorialPanel'
 import { ContinuousThreadsPanel } from '@/components/shared/ContinuousThreadsPanel'
 import { EmployeeFileTimeline } from '@/components/shared/EmployeeFileTimeline'
+import { SubtopicGuideCard } from '@/components/shared/SubtopicGuideCard'
+import { DAY_SUBTOPICS } from '@/lib/simulation-subtopics'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +26,10 @@ import {
   Award,
   BookOpen,
   ArrowLeft,
+  Sparkles,
+  HelpCircle,
+  Layers,
+  ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { InterviewType, PersonaType, ProgressStatus } from "@/lib/types"
@@ -84,12 +90,14 @@ export function DayModuleClient({
   )
   const isSubmitted = status === ProgressStatus.SUBMITTED || status === ProgressStatus.GRADED
 
-  // Generic fallback state
   const [genericDeliverable, setGenericDeliverable] = useState(
     'Standard NovaLink HR deliverable record aligned with statutory employment standards.'
   )
   const [fairStepsComplete, setFairStepsComplete] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const subtopics = DAY_SUBTOPICS[dayNumber] || []
+  const [activeSubtopic, setActiveSubtopic] = useState(subtopics[0]?.id || 'subtopic-0')
 
   const handleSubmitDay = async () => {
     setIsSubmitting(true)
@@ -112,7 +120,7 @@ export function DayModuleClient({
       }
 
       setStatus(ProgressStatus.SUBMITTED)
-      toast.success(`Day ${dayNumber} successfully submitted! Next day unlocked.`)
+      toast.success(`Day ${dayNumber} successfully submitted! Next day is now unlocked.`)
       router.refresh()
     } catch (err) {
       console.error(err)
@@ -122,293 +130,291 @@ export function DayModuleClient({
     }
   }
 
-  const renderDayWorkspace = () => {
+  // Render builder matching day and subtopic
+  const renderSubtopicBuilder = (subId: string) => {
     switch (dayNumber) {
-      // WEEK 1
       case 1:
-        return (
-          <div className="space-y-6">
-            <DepartmentManagerChat managerName="Marcus Chen" department="Network Operations" />
-            <VacancyRequestForm />
-            <JobDescriptionBuilder />
-            <PersonSpecBuilder />
-          </div>
-        )
+        if (subId === 'vacancy-request') return <VacancyRequestForm />
+        if (subId === 'job-description') return <JobDescriptionBuilder />
+        if (subId === 'person-spec') return <PersonSpecBuilder />
+        if (subId === 'manager-chat') return <DepartmentManagerChat managerName="Marcus Chen" department="Network Operations" />
+        break
 
       case 2:
-        return (
-          <div className="space-y-6">
-            <AdvertisementBuilder />
-            <ChannelSelector />
-            <ApplicationsInbox />
-          </div>
-        )
+        if (subId === 'advert-builder') return <AdvertisementBuilder />
+        if (subId === 'channel-selector') return <ChannelSelector />
+        if (subId === 'applications-inbox') return <ApplicationsInbox />
+        break
 
       case 3:
-        return (
-          <div className="space-y-6">
-            <ShortlistingSheet />
-            <InterviewScheduler />
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-3 border-b border-slate-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-teal-700" />
-                    <CardTitle className="text-base font-bold">Live Candidate Competency Interview</CardTitle>
+        if (subId === 'shortlisting') return <ShortlistingSheet />
+        if (subId === 'interview-scheduling') return <InterviewScheduler />
+        if (subId === 'candidate-interview') {
+          return (
+            <div className="space-y-6">
+              <Card className="border-border shadow-2xs bg-white rounded-2xl">
+                <CardHeader className="pb-3 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-[#2563eb]" />
+                      <CardTitle className="text-base font-bold text-[#191c1e]">Live Candidate Competency Interview</CardTitle>
+                    </div>
+                    <Badge variant="default" className="bg-[#004ac6] text-[10px]">
+                      Candidate: Jordan Hayes
+                    </Badge>
                   </div>
-                  <Badge variant="default" className="bg-teal-700 text-[10px]">
-                    Candidate: Jordan Hayes
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs">
-                  Conduct a live competency interview using the STAR method (Situation, Task, Action, Result).
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4">
-                <VoiceInterviewRoom
-                  persona={
-                    persona || {
-                      name: 'Jordan Hayes',
-                      personaType: PersonaType.CANDIDATE,
-                      qualityTier: 'STRONG',
-                      backgroundBrief: 'CCNP-certified Field Engineer with 6 years experience.',
-                      personalityNotes: 'Confident, structured, clear incident response steps.',
+                  <CardDescription className="text-xs text-[#737686]">
+                    Conduct a live competency interview using the STAR method (Situation, Task, Action, Result).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <VoiceInterviewRoom
+                    persona={
+                      persona || {
+                        name: 'Jordan Hayes',
+                        personaType: PersonaType.CANDIDATE,
+                        qualityTier: 'STRONG',
+                        backgroundBrief: 'CCNP-certified Field Engineer with 6 years experience.',
+                        personalityNotes: 'Confident, structured, clear incident response steps.',
+                      }
                     }
-                  }
-                  interviewType={InterviewType.SELECTION}
-                  dayNumber={3}
-                />
-              </CardContent>
-            </Card>
-            <InterviewAssessmentForm candidateName="Jordan Hayes" />
-          </div>
-        )
+                    interviewType={InterviewType.SELECTION}
+                    dayNumber={3}
+                  />
+                </CardContent>
+              </Card>
+              <InterviewAssessmentForm candidateName="Jordan Hayes" />
+            </div>
+          )
+        }
+        break
 
       case 4:
-        return (
-          <div className="space-y-6">
-            <ReferenceCheckPanel candidateName="Jordan Hayes" refereeName="Dr. Arthur Sterling" />
-            <SelectionDecisionForm />
-            <OfferContractGenerator candidateName="Jordan Hayes" />
-          </div>
-        )
+        if (subId === 'reference-check') return <ReferenceCheckPanel candidateName="Jordan Hayes" refereeName="Dr. Arthur Sterling" />
+        if (subId === 'selection-decision') return <SelectionDecisionForm />
+        if (subId === 'offer-contract') return <OfferContractGenerator candidateName="Jordan Hayes" />
+        break
 
       case 5:
-        return (
-          <div className="space-y-6">
-            <OnboardingChecklistBuilder employeeName="Jordan Hayes" />
-            <OrientationLogger employeeName="Jordan Hayes" />
-            <OrgChartAssignment employeeName="Jordan Hayes" />
-          </div>
-        )
+        if (subId === 'onboarding-matrix') return <OnboardingChecklistBuilder employeeName="Jordan Hayes" />
+        if (subId === 'orientation-log') return <OrientationLogger employeeName="Jordan Hayes" />
+        if (subId === 'org-chart') return <OrgChartAssignment employeeName="Jordan Hayes" />
+        break
 
-      // WEEK 2
       case 6:
-        return (
-          <div className="space-y-6">
-            <ProbationObjectiveSetter />
-            <ProbationCheckin persona={persona} />
-          </div>
-        )
+        if (subId === 'probation-objectives') return <ProbationObjectiveSetter />
+        if (subId === 'probation-checkin') return <ProbationCheckin persona={persona} />
+        break
 
       case 7:
-        return (
-          <div className="space-y-6">
-            <KpiBuilder />
-            <AppraisalAccordion />
-          </div>
-        )
+        if (subId === 'kpi-builder') return <KpiBuilder />
+        if (subId === 'appraisal-360') return <AppraisalAccordion />
+        break
 
       case 8:
-        return (
-          <div className="space-y-6">
-            <TrainingNeedSelector />
-            <TrainingRegisterForm />
-            <TrainingCheckin />
-          </div>
-        )
+        if (subId === 'tna') return <TrainingNeedSelector />
+        if (subId === 'kirkpatrick') return <TrainingRegisterForm />
+        break
 
       case 9:
-        return (
-          <div className="space-y-6">
-            <WelfareCheckin />
-            <GrievanceHandler />
-          </div>
-        )
+        if (subId === 'welfare-listening') return <WelfareCheckin />
+        if (subId === 'grievance-handling') return <GrievanceHandler />
+        break
 
       case 10:
-        return (
-          <div className="space-y-6">
-            <CaseContextCard />
-            <DisciplinaryHearing />
-            <FairProcessChecklist
-              onChecklistChange={(_, allDone) => setFairStepsComplete(allDone)}
-            />
-            <CaseFileForm allFairStepsComplete={fairStepsComplete} />
-          </div>
-        )
+        if (subId === 'acas-code') {
+          return (
+            <div className="space-y-6">
+              <CaseContextCard />
+              <FairProcessChecklist
+                onChecklistChange={(_, allDone) => setFairStepsComplete(allDone)}
+              />
+            </div>
+          )
+        }
+        if (subId === 'case-evidence') {
+          return (
+            <div className="space-y-6">
+              <DisciplinaryHearing />
+              <CaseFileForm allFairStepsComplete={fairStepsComplete} />
+            </div>
+          )
+        }
+        break
 
       default:
         return (
-          <div className="space-y-6">
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-3 border-b border-slate-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-teal-700" />
-                    <CardTitle className="text-base font-bold">
-                      Day {dayNumber} Strategic HR Deliverables
-                    </CardTitle>
-                  </div>
-                  <Badge variant="outline" className="text-[10px]">
-                    Simulation Module
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs">
-                  Review organizational benchmarks and draft required strategic documentation.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-5 space-y-3">
-                <Textarea
-                  value={genericDeliverable}
-                  onChange={(e) => setGenericDeliverable(e.target.value)}
-                  disabled={isSubmitted}
-                  className="text-xs min-h-[120px]"
-                />
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader className="pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-teal-700" />
-                  <CardTitle className="text-base font-bold">Practicum Consultation Room</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4">
-                <VoiceInterviewRoom
-                  persona={
-                    persona || {
-                      name: 'Eleanor Vance',
-                      personaType: PersonaType.MANAGER,
-                      backgroundBrief: 'Lead HR Trainer & Practicum Director.',
-                      personalityNotes: 'Supportive, pedagogically rigorous.',
-                    }
-                  }
-                  interviewType={InterviewType.SCOPING}
-                  dayNumber={dayNumber}
-                />
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="border-border bg-white rounded-2xl p-6 shadow-2xs">
+            <CardHeader className="px-0 pt-0 pb-3">
+              <CardTitle className="text-sm font-bold text-[#191c1e]">Practicum Deliverable Record</CardTitle>
+              <CardDescription className="text-xs text-[#737686]">
+                Provide your statutory analysis and structured proposal for Day {dayNumber}.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-0 pb-0 space-y-3">
+              <Textarea
+                value={genericDeliverable}
+                onChange={(e) => setGenericDeliverable(e.target.value)}
+                className="text-xs min-h-[140px] bg-[#f7f9fb] border-border rounded-lg"
+              />
+            </CardContent>
+          </Card>
         )
     }
+    return null
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-3rem)] bg-[#F8F9FA]">
-      {/* Frappe Sidebar */}
+    <div className="flex min-h-[calc(100vh-4rem)] bg-[#f7f9fb]">
+      {/* Sidebar */}
       <FrappeSidebar />
 
-      {/* Main Frappe Document View */}
-      <main className="flex-1 p-4 sm:p-6 space-y-4 max-w-7xl overflow-x-hidden">
-        {/* Frappe Breadcrumbs & Actions Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+      {/* Main Content Area */}
+      <main className="flex-1 p-6 lg:p-8 space-y-6 max-w-7xl overflow-x-hidden">
+        {/* Breadcrumb & Day Title Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border">
           <div>
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-0.5">
-              <Link href="/dashboard" className="hover:text-slate-900">
-                Home
-              </Link>
+            <div className="flex items-center gap-1.5 text-xs text-[#737686] mb-1">
+              <Link href="/dashboard" className="hover:text-[#191c1e]">Training Lab</Link>
               <span>/</span>
-              <Link href="/dashboard" className="hover:text-slate-900">
-                HR Desk
-              </Link>
-              <span>/</span>
-              <span className="font-semibold text-slate-800">Simulation Module {dayNumber}</span>
+              <span className="text-[#2563eb] font-semibold">Day {dayNumber} Practicum</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href="/dashboard"
-                className="p-1 rounded hover:bg-slate-200 text-slate-500 transition"
-                title="Back to HR Desk"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Link>
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                Day {dayNumber}: {dayTitle}
-              </h1>
+            <h1 className="text-2xl font-bold tracking-tight text-[#191c1e] flex items-center gap-2.5">
+              Day {dayNumber}: {dayTitle}
               <Badge
                 variant={isSubmitted ? 'default' : 'outline'}
                 className={`text-[10px] ${
-                  isSubmitted ? 'bg-emerald-700 text-white' : 'bg-white text-slate-700'
+                  isSubmitted
+                    ? 'bg-[#004ac6] text-white'
+                    : 'bg-[#dbe1ff] text-[#00174b] border-[#b4c5ff]'
                 }`}
               >
-                {isSubmitted ? 'Submitted & Locked' : 'In Progress'}
+                {status}
               </Badge>
-            </div>
+            </h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            {isSubmitted ? (
-              <div className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-md border border-emerald-200 text-xs font-semibold">
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Milestone Completed
-              </div>
-            ) : (
+          <div className="flex items-center gap-2.5">
+            <Link href="/dashboard">
               <Button
-                onClick={handleSubmitDay}
-                disabled={isSubmitting}
-                className="bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs h-8 px-4 gap-1.5 shadow-2xs"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-semibold gap-1.5 border-border bg-white hover:bg-[#f2f4f6] text-[#191c1e]"
               >
-                {isSubmitting ? (
-                  'Submitting Deliverables...'
-                ) : (
-                  <>
-                    <Send className="w-3 h-3" /> Save & Submit Deliverables
-                  </>
-                )}
+                <ArrowLeft className="w-3.5 h-3.5" /> Back to Console
               </Button>
-            )}
+            </Link>
+            <Button
+              size="sm"
+              onClick={handleSubmitDay}
+              disabled={isSubmitting || isSubmitted}
+              className="h-8 text-xs font-bold bg-[#2563eb] hover:bg-[#1d4ed8] text-white gap-1.5 shadow-xs"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{isSubmitted ? 'Day Submitted ✓' : isSubmitting ? 'Submitting...' : `Submit Day ${dayNumber} Dossier`}</span>
+            </Button>
           </div>
         </div>
 
-        {/* Main Work Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 space-y-5">
-            {renderDayWorkspace()}
+        {/* 12-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Main Left Area (8 cols): Subtopics & Hands-on Workspaces */}
+          <div className="lg:col-span-8 space-y-6">
+            {subtopics.length > 0 ? (
+              <div className="space-y-6">
+                {/* Subtopic Segmented Navigation Tabs */}
+                <div className="bg-white rounded-2xl border border-border p-2 shadow-2xs">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#737686] px-3 py-1.5">
+                    Day {dayNumber} Modular Sub-Topics ({subtopics.length} Modules)
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
+                    {subtopics.map((st, idx) => {
+                      const isActive = activeSubtopic === st.id
+                      return (
+                        <button
+                          key={st.id}
+                          onClick={() => setActiveSubtopic(st.id)}
+                          className={`p-2.5 rounded-xl text-left text-xs transition flex flex-col justify-between gap-1.5 ${
+                            isActive
+                              ? 'bg-[#d0e1fb] border border-[#b4c5ff] text-[#0b1c30] font-bold shadow-2xs'
+                              : 'bg-[#f7f9fb] border border-border/60 text-[#434655] hover:bg-[#f2f4f6]'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className="text-[10px] font-mono text-[#004ac6] font-bold">
+                              Topic {idx + 1}
+                            </span>
+                            <span className="w-2 h-2 rounded-full bg-[#2563eb]" />
+                          </div>
+                          <span className="line-clamp-2 leading-tight text-[11px]">
+                            {st.title}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Active Sub-topic Guide & Hands-on Builder */}
+                {subtopics.map((st) => {
+                  if (st.id !== activeSubtopic) return null
+                  return (
+                    <div key={st.id} className="space-y-6 animate-in fade-in duration-150">
+                      {/* 1. Subtopic Guide Card with Overview, Legal Basis & Interactive Question */}
+                      <SubtopicGuideCard
+                        title={st.title}
+                        badgeText={st.badge}
+                        overview={st.overview}
+                        legalBasis={st.legalBasis}
+                        bestPractices={st.bestPractices}
+                        pitfalls={st.pitfalls}
+                        question={st.question}
+                      />
+
+                      {/* 2. Subtopic Hands-on Interactive Tool */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between px-1">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-[#737686] flex items-center gap-1.5">
+                            <Layers className="w-3.5 h-3.5 text-[#2563eb]" /> Practitioner Execution Tool
+                          </h4>
+                          <span className="text-[10px] text-[#004ac6] font-semibold">Active Module</span>
+                        </div>
+                        {renderSubtopicBuilder(st.id)}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              /* Fallback standard render */
+              <div className="space-y-6">
+                <Card className="border-border bg-white rounded-2xl p-6 shadow-2xs">
+                  <CardHeader className="px-0 pt-0 pb-3">
+                    <CardTitle className="text-base font-bold text-[#191c1e]">Simulation Workspace</CardTitle>
+                    <CardDescription className="text-xs text-[#737686]">
+                      Execute your daily human resources deliverable below.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0 pb-0">
+                    <Textarea
+                      value={genericDeliverable}
+                      onChange={(e) => setGenericDeliverable(e.target.value)}
+                      className="text-xs min-h-[140px] bg-[#f7f9fb] border-border rounded-lg"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
-          {/* Right Sidebar */}
-          <div className="space-y-5">
-            <EmployeeFileTimeline
-              candidateName={
-                dayNumber <= 5
-                  ? 'Jordan Hayes (Field Engineer Requisition)'
-                  : 'Riley Morgan / Jordan Reed'
-              }
-              roleTitle={dayNumber <= 5 ? 'Network Operations' : 'Operations Division'}
-              events={[
-                {
-                  id: 'ev-current',
-                  dayNumber,
-                  title: `Day ${dayNumber} Milestone Active`,
-                  type: dayTitle.split('&')[0],
-                  description: 'Active personnel cases and candidate dossiers.',
-                  date: `Simulated Day ${dayNumber}`,
-                },
-              ]}
-            />
-
-            {dayNumber >= 6 && <ContinuousThreadsPanel currentDay={dayNumber} />}
+          {/* Right Sidebar Area (4 cols): Tutorial Knowledge Base & Audit */}
+          <div className="lg:col-span-4 space-y-6">
+            <TutorialPanel phaseSlug={phaseSlug} />
+            <ContinuousThreadsPanel currentDay={dayNumber} />
+            <EmployeeFileTimeline candidateName="Jordan Hayes" roleTitle="Field Engineer" />
           </div>
         </div>
       </main>
-
-      {/* Collapsible Tutorial Panel */}
-      <TutorialPanel
-        phaseSlug={phaseSlug}
-        title={dayTitle}
-        initialEngaged={initialProgress?.engagedAt != null}
-      />
     </div>
   )
 }
