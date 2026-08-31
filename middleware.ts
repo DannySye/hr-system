@@ -25,14 +25,20 @@ export default withAuth(
     callbacks: {
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname
-        // Public paths
+        // Public paths — accessible without authentication
         if (
+          path === '/' ||
           path === '/login' ||
+          path === '/register' ||
+          path === '/about' ||
+          path === '/services' ||
           path.startsWith('/careers') ||
           path.startsWith('/api/careers') ||
           path.startsWith('/api/auth') ||
+          path.startsWith('/api/simulation/applications') ||
           path.startsWith('/_next') ||
-          path.startsWith('/favicon.ico')
+          path.startsWith('/favicon.ico') ||
+          path.startsWith('/images')
         ) {
           return true
         }
@@ -44,6 +50,7 @@ export default withAuth(
       signIn: '/login',
     },
   }
+
 )
 
 export const config = {

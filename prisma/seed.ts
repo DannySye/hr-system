@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -49,28 +48,13 @@ async function main() {
   await prisma.simulationCalendar.deleteMany()
   await prisma.user.deleteMany()
 
-  // 2. Hash default passwords
-  const trainerPassword = await bcrypt.hash('trainer123', 10)
-  const traineePassword = await bcrypt.hash('trainee123', 10)
-
-  // 3. Create Users
-  const trainer = await prisma.user.create({
-    data: {
-      email: 'trainer@novalink.com',
-      passwordHash: trainerPassword,
-      role: 'TRAINER',
-      fullName: 'Eleanor Vance (Lead Trainer)',
-    },
-  })
-
-  const trainee = await prisma.user.create({
-    data: {
-      email: 'trainee@novalink.com',
-      passwordHash: traineePassword,
-      role: 'TRAINEE',
-      fullName: 'Alex Mercer (HR Trainee)',
-    },
-  })
+  // 3. No hardcoded demo users — all accounts are created via the self-registration flow.
+  // To get started:
+  //   1. Visit /login on your running dev server
+  //   2. Click "Create Account" and register as a Trainee to begin the practicum
+  //   3. To register as a Trainer, use the TRAINER_INVITE_CODE set in your .env
+  console.log('ℹ️  No demo users seeded. Register via /login → Create Account to get started.')
+  console.log('   TRAINER_INVITE_CODE is required to create a Trainer account (set in .env).')
 
   // 4. Create Company
   const company = await prisma.company.create({
@@ -170,16 +154,9 @@ async function main() {
     })
   }
 
-  // 8. Initialize Trainee Progress
-  for (let day = 1; day <= 12; day++) {
-    await prisma.traineeProgress.create({
-      data: {
-        traineeId: trainee.id,
-        dayNumber: day,
-        status: day === 1 ? 'IN_PROGRESS' : 'LOCKED',
-      },
-    })
-  }
+  // 8. Trainee Progress is initialized when users self-register via /login → Create Account.
+  //    The registration API (app/api/auth/register/route.ts) creates 12-day progress records automatically.
+
 
   // 9. Create Manager Persona (Marcus Chen)
   const personaMarcus = await prisma.aiPersona.create({

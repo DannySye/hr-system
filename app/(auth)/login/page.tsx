@@ -1,34 +1,32 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { signIn, getSession } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
 import {
   Shield,
-  UserCheck,
   ArrowRight,
-  Lock,
-  Mail,
   UserPlus,
   LogIn,
-  Sparkles,
   GraduationCap,
-  Building,
   Compass,
+  ArrowLeft,
+  KeyRound,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Role } from '@/lib/types'
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
+  const searchParams = useSearchParams()
+  const defaultTab = searchParams?.get('tab') === 'register' ? 'register' : 'login'
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(defaultTab)
 
   // Sign In State
   const [loginEmail, setLoginEmail] = useState('')
@@ -40,6 +38,7 @@ export default function LoginPage() {
   const [regEmail, setRegEmail] = useState('')
   const [regPassword, setRegPassword] = useState('')
   const [regRole, setRegRole] = useState<Role>(Role.TRAINEE)
+  const [regInviteCode, setRegInviteCode] = useState('')
   const [regLoading, setRegLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -61,14 +60,16 @@ export default function LoginPage() {
         toast.error(res.error)
       } else {
         toast.success('Successfully logged in')
-        if (loginEmail.toLowerCase().includes('trainer')) {
+        // Fetch session to determine exact role
+        const session = await getSession()
+        if (session?.user?.role === 'TRAINER') {
           router.push('/trainer/dashboard')
         } else {
           router.push('/dashboard')
         }
         router.refresh()
       }
-    } catch (err) {
+    } catch {
       toast.error('An unexpected error occurred.')
     } finally {
       setLoginLoading(false)
@@ -92,6 +93,7 @@ export default function LoginPage() {
           email: regEmail,
           password: regPassword,
           role: regRole,
+          inviteCode: regInviteCode,
         }),
       })
 
@@ -121,47 +123,36 @@ export default function LoginPage() {
         setActiveTab('login')
         setLoginEmail(regEmail)
       }
-    } catch (err) {
+    } catch {
       toast.error('Registration failed. Please try again.')
     } finally {
       setRegLoading(false)
     }
   }
 
-  const handleQuickLogin = async (demoEmail: string, demoPass: string) => {
-    setLoginEmail(demoEmail)
-    setLoginPassword(demoPass)
-    setLoginLoading(true)
-    try {
-      const res = await signIn('credentials', {
-        email: demoEmail,
-        password: demoPass,
-        redirect: false,
-      })
-
-      if (res?.error) {
-        toast.error(res.error)
-      } else {
-        toast.success(`Logged in as ${demoEmail}`)
-        if (demoEmail.includes('trainer')) {
-          router.push('/trainer/dashboard')
-        } else {
-          router.push('/dashboard')
-        }
-        router.refresh()
-      }
-    } catch (err) {
-      toast.error('Quick login failed')
-    } finally {
-      setLoginLoading(false)
-    }
-  }
-
   return (
-    <div className="min-h-[90vh] flex items-center justify-center p-4 sm:p-6 bg-[#f7f9fb]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#f7f9fb]">
       <div className="max-w-md w-full space-y-4">
+        {/* Navigation back to homepage */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs text-[#737686] hover:text-[#2563eb] font-medium transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to NovaLink Home</span>
+          </Link>
+          <Link
+            href="/careers"
+            className="inline-flex items-center gap-1.5 text-xs text-[#004ac6] hover:underline font-semibold"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>Careers Portal</span>
+          </Link>
+        </div>
+
         {/* Brand Header with Logo */}
-        <div className="text-center space-y-1.5">
+        <div className="text-center space-y-1.5 pt-2">
           <div className="w-12 h-12 mx-auto rounded-xl overflow-hidden border border-border bg-[#004ac6] flex items-center justify-center shadow-md">
             <Image
               src="/images/logo.png"
@@ -175,7 +166,7 @@ export default function LoginPage() {
             NovaLink HR OS
           </h1>
           <p className="text-xs text-[#737686]">
-            Enterprise People Operations & Simulation Desk
+            Enterprise People Operations & Simulation Lab Portal
           </p>
         </div>
 
@@ -186,10 +177,16 @@ export default function LoginPage() {
             className="w-full"
           >
             <TabsList className="grid grid-cols-2 w-full rounded-none border-b border-border bg-[#f2f4f6] p-1">
-              <TabsTrigger value="login" className="text-xs font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs">
+              <TabsTrigger
+                value="login"
+                className="text-xs font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs"
+              >
                 <LogIn className="w-3.5 h-3.5 mr-1.5" /> Sign In
               </TabsTrigger>
-              <TabsTrigger value="register" className="text-xs font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs">
+              <TabsTrigger
+                value="register"
+                className="text-xs font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-[#004ac6] data-[state=active]:shadow-xs"
+              >
                 <UserPlus className="w-3.5 h-3.5 mr-1.5" /> Create Account
               </TabsTrigger>
             </TabsList>
@@ -207,6 +204,7 @@ export default function LoginPage() {
                       onChange={(e) => setLoginEmail(e.target.value)}
                       disabled={loginLoading}
                       className="text-xs h-9 bg-[#f7f9fb] border-border rounded-lg"
+                      required
                     />
                   </div>
 
@@ -219,11 +217,12 @@ export default function LoginPage() {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       disabled={loginLoading}
                       className="text-xs h-9 bg-[#f7f9fb] border-border rounded-lg"
+                      required
                     />
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col gap-2.5 pb-4">
+                <CardFooter className="flex flex-col gap-2.5 pb-6">
                   <Button
                     type="submit"
                     className="w-full text-xs font-bold bg-[#2563eb] hover:bg-[#1d4ed8] text-white h-9 rounded-lg shadow-xs"
@@ -233,7 +232,7 @@ export default function LoginPage() {
                   </Button>
 
                   <p className="text-[11px] text-center text-[#737686]">
-                    Need an account?{' '}
+                    New practitioner or trainee?{' '}
                     <button
                       type="button"
                       onClick={() => setActiveTab('register')}
@@ -244,38 +243,6 @@ export default function LoginPage() {
                   </p>
                 </CardFooter>
               </form>
-
-              {/* Seed Demo Quick Logins */}
-              <div className="px-5 pb-5 pt-3 border-t border-border/70 bg-[#f7f9fb] space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#737686] block">
-                  Quick Testing Accounts
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickLogin('trainee@novalink.com', 'trainee123')}
-                    disabled={loginLoading}
-                    className="text-[11px] h-8 justify-start gap-1.5 border-border text-[#191c1e] bg-white hover:bg-[#f2f4f6]"
-                  >
-                    <UserCheck className="w-3.5 h-3.5 text-[#2563eb]" />
-                    <span>Alex (Trainee)</span>
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickLogin('trainer@novalink.com', 'trainer123')}
-                    disabled={loginLoading}
-                    className="text-[11px] h-8 justify-start gap-1.5 border-border text-[#191c1e] bg-white hover:bg-[#f2f4f6]"
-                  >
-                    <Shield className="w-3.5 h-3.5 text-[#505f76]" />
-                    <span>Eleanor (Trainer)</span>
-                  </Button>
-                </div>
-              </div>
             </TabsContent>
 
             {/* TAB 2: REGISTER */}
@@ -323,7 +290,7 @@ export default function LoginPage() {
 
                   {/* Role Selector */}
                   <div className="space-y-1 pt-1">
-                    <label className="text-xs font-semibold text-[#191c1e]">Role</label>
+                    <label className="text-xs font-semibold text-[#191c1e]">Account Type</label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -357,11 +324,32 @@ export default function LoginPage() {
                           <span>HR Trainer</span>
                         </div>
                         <span className="text-[10px] text-[#737686] font-normal">
-                          Cohort & Grading
+                          Faculty & Grading
                         </span>
                       </button>
                     </div>
                   </div>
+
+                  {/* Trainer Invite Code Field (only if Trainer selected) */}
+                  {regRole === Role.TRAINER && (
+                    <div className="space-y-1 pt-1 animate-in fade-in duration-200">
+                      <label className="text-xs font-semibold text-[#191c1e] flex items-center gap-1">
+                        <KeyRound className="w-3 h-3 text-[#2563eb]" />
+                        <span>Trainer Invite Code</span>
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Enter faculty authorization code"
+                        value={regInviteCode}
+                        onChange={(e) => setRegInviteCode(e.target.value)}
+                        disabled={regLoading}
+                        className="text-xs h-9 bg-[#f7f9fb] border-border rounded-lg"
+                      />
+                      <p className="text-[10px] text-[#737686]">
+                        Required for instructor / trainer privilege assignment.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
 
                 <CardFooter className="flex flex-col gap-2.5 pb-5">
@@ -370,7 +358,7 @@ export default function LoginPage() {
                     className="w-full text-xs font-bold bg-[#2563eb] hover:bg-[#1d4ed8] text-white h-9 rounded-lg shadow-xs"
                     disabled={regLoading}
                   >
-                    {regLoading ? 'Creating Account...' : 'Create Account'}
+                    {regLoading ? 'Creating Account...' : 'Create Account & Begin'}
                   </Button>
 
                   <p className="text-[11px] text-center text-[#737686]">
@@ -392,7 +380,7 @@ export default function LoginPage() {
         {/* Public Careers Portal Banner */}
         <div className="p-3.5 rounded-2xl bg-white border border-border shadow-2xs text-center space-y-1">
           <span className="text-xs font-semibold text-[#434655] block">
-            Looking for open roles or testing job applications?
+            Looking for open roles or testing job candidate pipelines?
           </span>
           <Link
             href="/careers"
@@ -407,3 +395,18 @@ export default function LoginPage() {
     </div>
   )
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#f7f9fb] text-xs text-[#737686]">
+          Loading NovaLink HR Portal...
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
+  )
+}
+

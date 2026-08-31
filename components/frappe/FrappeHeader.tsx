@@ -134,6 +134,13 @@ export function FrappeHeader() {
       {/* Right: Actions & User Menu */}
       <div className="flex items-center gap-2.5 shrink-0">
         <Link
+          href="/"
+          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-[#f2f4f6] text-[#434655] font-semibold text-xs transition border border-border"
+        >
+          <span>Company Home</span>
+        </Link>
+
+        <Link
           href="/careers"
           target="_blank"
           rel="noopener noreferrer"
@@ -214,6 +221,15 @@ export function FrappeHeader() {
                     <p className="font-bold text-[#191c1e]">{user.name}</p>
                     <p className="text-[11px] text-[#737686] truncate">{user.email}</p>
                   </div>
+
+                  <Link
+                    href="/"
+                    onClick={() => setShowUserMenu(false)}
+                    className="w-full text-left px-3.5 py-2 hover:bg-[#f2f4f6] flex items-center gap-2.5 text-[#191c1e]"
+                  >
+                    <Compass className="w-3.5 h-3.5 text-[#505f76]" />
+                    <span>NovaLink Public Website</span>
+                  </Link>
 
                   <Link
                     href="/dashboard"

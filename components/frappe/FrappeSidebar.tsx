@@ -42,8 +42,8 @@ const SIMULATION_DAYS = [
   { day: 8, title: 'Training & Development', slug: 'training-development' },
   { day: 9, title: 'Employee Welfare', slug: 'employee-welfare' },
   { day: 10, title: 'Disciplinary Process', slug: 'discipline' },
-  { day: 11, title: 'Reward & Recognition', slug: 'reward-recognition' },
-  { day: 12, title: 'Exit & Offboarding', slug: 'exit-interviews' },
+  { day: 11, title: 'Career Development', slug: 'career-development' },
+  { day: 12, title: 'Separation & Capstone', slug: 'separation' },
 ]
 
 export function FrappeSidebar() {
@@ -246,6 +246,13 @@ export function FrappeSidebar() {
 
       {/* Footer Navigation */}
       <div className="border-t border-border pt-3 space-y-1">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 px-3 py-1.5 text-xs text-[#434655] hover:bg-[#e6e8ea] rounded-lg transition-colors"
+        >
+          <Compass className="w-4 h-4 text-[#505f76]" />
+          <span>NovaLink Homepage</span>
+        </Link>
         <Link
           href="/tutorials/workforce-planning"
           className="flex items-center gap-2.5 px-3 py-1.5 text-xs text-[#434655] hover:bg-[#e6e8ea] rounded-lg transition-colors"

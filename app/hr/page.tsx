@@ -120,6 +120,15 @@ export default async function EnterpriseHrPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Link href="/" target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-semibold gap-1.5 border-border bg-white hover:bg-[#f2f4f6] text-[#191c1e]"
+              >
+                <span>Company Site</span>
+              </Button>
+            </Link>
             <Link href="/dashboard">
               <Button
                 variant="outline"

@@ -5,7 +5,8 @@ import { Role, ProgressStatus } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   try {
-    const { fullName, email, password, role = Role.TRAINEE } = await req.json()
+    const body = await req.json()
+    const { fullName, email, password, role = Role.TRAINEE, inviteCode = '' } = body
 
     if (!fullName || !email || !password) {
       return NextResponse.json(
@@ -30,6 +31,21 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10)
+    const requestedRole = role === Role.TRAINER ? Role.TRAINER : Role.TRAINEE
+
+    // Guard: TRAINER registration requires either an invite code OR being the very first trainer
+    if (requestedRole === Role.TRAINER) {
+      const expectedCode = process.env.TRAINER_INVITE_CODE
+      // Check if any trainer already exists (first-trainer bootstrap allows no code if no trainers exist)
+      const existingTrainerCount = await prisma.user.count({ where: { role: Role.TRAINER } })
+
+      if (existingTrainerCount > 0 && expectedCode && inviteCode !== expectedCode) {
+        return NextResponse.json(
+          { error: 'Invalid trainer invite code. Please contact your programme administrator.' },
+          { status: 403 }
+        )
+      }
+    }
 
     // Create User
     const user = await prisma.user.create({
@@ -37,9 +53,10 @@ export async function POST(req: NextRequest) {
         fullName: cleanName,
         email: cleanEmail,
         passwordHash,
-        role: role === Role.TRAINER ? Role.TRAINER : Role.TRAINEE,
+        role: requestedRole,
       },
     })
+
 
     // If trainee, initialize Employee record and 12-day simulation progress
     if (user.role === Role.TRAINEE) {

@@ -30,6 +30,8 @@ import {
   GraduationCap,
 } from 'lucide-react'
 
+import { TrainingHrBridge } from '@/components/shared/TrainingHrBridge'
+
 export const dynamic = 'force-dynamic'
 
 export default async function TraineeDashboardPage() {
@@ -106,6 +108,15 @@ export default async function TraineeDashboardPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Link href="/" target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-semibold gap-1.5 border-border bg-white hover:bg-[#f2f4f6] text-[#191c1e]"
+              >
+                <span>Company Site</span>
+              </Button>
+            </Link>
             <Link href="/careers" target="_blank" rel="noopener noreferrer">
               <Button
                 variant="outline"
@@ -120,12 +131,37 @@ export default async function TraineeDashboardPage() {
                 size="sm"
                 className="h-8 text-xs font-semibold bg-[#2563eb] hover:bg-[#1d4ed8] text-white gap-1.5 shadow-xs"
               >
-                <span>Continue Day {Math.min(completedDaysCount + 1, 12)}</span>
+                <span>{completedDaysCount === 0 ? 'Start Day 1' : `Continue Day ${Math.min(completedDaysCount + 1, 12)}`}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
           </div>
         </div>
+
+        {/* Onboarding Banner for Day 1 */}
+        {completedDaysCount === 0 && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#2563eb] to-[#004ac6] text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-white/20 text-white text-[10px] uppercase font-bold">
+                  Day 1 Ready
+                </Badge>
+                <span className="font-bold text-sm">Welcome to the NovaLink HR Practicum</span>
+              </div>
+              <p className="text-xs text-[#dbe1ff]">
+                You have been assigned to Network Operations. Meet with hiring manager Marcus Chen to scope the Field Engineer position.
+              </p>
+            </div>
+            <Link href="/day/1">
+              <Button size="sm" className="bg-white text-[#004ac6] hover:bg-[#eff1f3] text-xs font-bold shrink-0 shadow-xs">
+                Launch Day 1 Simulation &rarr;
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {/* Training ↔ Careers Connected Bridge */}
+        <TrainingHrBridge />
 
         {/* Top 4 KPI Number Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -269,42 +305,52 @@ export default async function TraineeDashboardPage() {
                 </span>
               </div>
 
-              <div className="flex flex-col gap-4 overflow-y-auto pr-1 relative">
-                {/* Event 1 */}
-                <div className="flex gap-3 group">
-                  <div className="w-8 h-8 rounded-full bg-[#dbe1ff] text-[#004ac6] flex items-center justify-center shrink-0 shadow-2xs">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  <div className="flex flex-col text-xs">
-                    <span className="font-bold text-[#191c1e]">Day 1 JD Authorized</span>
-                    <span className="text-[#434655] text-[11px]">Marcus Chen approved Field Engineer JD.</span>
-                    <span className="text-[10px] text-[#737686] mt-0.5">Today, 09:30 AM</span>
-                  </div>
-                </div>
+              <div className="flex flex-col gap-3.5 overflow-y-auto pr-1 relative">
+                {progressList.filter((p) => p.status === 'SUBMITTED' || p.status === 'GRADED').length > 0 ? (
+                  progressList
+                    .filter((p) => p.status === 'SUBMITTED' || p.status === 'GRADED')
+                    .slice(0, 5)
+                    .map((p) => (
+                      <div key={p.id} className="flex gap-3 group">
+                        <div className="w-8 h-8 rounded-full bg-[#dcfce7] text-[#15803d] flex items-center justify-center shrink-0 shadow-2xs font-bold text-xs">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                        <div className="flex flex-col text-xs">
+                          <span className="font-bold text-[#191c1e]">Day {p.dayNumber} Deliverables Approved</span>
+                          <span className="text-[#434655] text-[11px]">
+                            {p.status === 'GRADED' ? 'Reviewed and graded by lead faculty.' : 'Submitted for trainer audit.'}
+                          </span>
+                          <span className="text-[10px] text-[#737686] mt-0.5">
+                            {p.submittedAt ? new Date(p.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recently Completed'}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <>
+                    <div className="flex gap-3 group">
+                      <div className="w-8 h-8 rounded-full bg-[#dbe1ff] text-[#004ac6] flex items-center justify-center shrink-0 shadow-2xs">
+                        <GraduationCap className="w-4 h-4 text-[#2563eb]" />
+                      </div>
+                      <div className="flex flex-col text-xs">
+                        <span className="font-bold text-[#191c1e]">Practicum Lab Initialized</span>
+                        <span className="text-[#434655] text-[11px]">Assigned to Network Operations cohort.</span>
+                        <span className="text-[10px] text-[#737686] mt-0.5">Ready for Day 1</span>
+                      </div>
+                    </div>
 
-                {/* Event 2 */}
-                <div className="flex gap-3 group">
-                  <div className="w-8 h-8 rounded-full bg-[#d0e1fb] text-[#0b1c30] flex items-center justify-center shrink-0 shadow-2xs">
-                    <Compass className="w-4 h-4 text-[#2563eb]" />
-                  </div>
-                  <div className="flex flex-col text-xs">
-                    <span className="font-bold text-[#191c1e]">Candidate Sourcing Live</span>
-                    <span className="text-[#434655] text-[11px]">Published to NovaLink Careers Portal.</span>
-                    <span className="text-[10px] text-[#737686] mt-0.5">Today, 10:15 AM</span>
-                  </div>
-                </div>
-
-                {/* Event 3 */}
-                <div className="flex gap-3 group">
-                  <div className="w-8 h-8 rounded-full bg-[#dcfce7] text-[#15803d] flex items-center justify-center shrink-0 shadow-2xs">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div className="flex flex-col text-xs">
-                    <span className="font-bold text-[#191c1e]">Candidate Screened</span>
-                    <span className="text-[#434655] text-[11px]">Jordan Hayes verified in ATS matrix.</span>
-                    <span className="text-[10px] text-[#737686] mt-0.5">Today, 11:45 AM</span>
-                  </div>
-                </div>
+                    <div className="flex gap-3 group">
+                      <div className="w-8 h-8 rounded-full bg-[#d0e1fb] text-[#0b1c30] flex items-center justify-center shrink-0 shadow-2xs">
+                        <Compass className="w-4 h-4 text-[#2563eb]" />
+                      </div>
+                      <div className="flex flex-col text-xs">
+                        <span className="font-bold text-[#191c1e]">Careers Ecosystem Active</span>
+                        <span className="text-[#434655] text-[11px]">Public portal connected to ATS queue.</span>
+                        <span className="text-[10px] text-[#737686] mt-0.5">Live Integration</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
